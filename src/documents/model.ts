@@ -1,7 +1,7 @@
 export class TextDocument {
     public statistics: Statistics;
 
-    private constructor(public title:string, public content:string, public id?:string) {
+    private constructor(public title:string, public content:string, public id?:string, private _mongoId?:string) {
         this.statistics = new Statistics();
     }
 
@@ -19,7 +19,11 @@ export class TextDocument {
     }
 
     static fromStorage(body:any, baseURI: string):TextDocument {
-        return new TextDocument(body.title, body.content, baseURI + body._id);
+        return new TextDocument(body.title, body.content, baseURI + body._id, body._id.toString());
+    }
+
+    getMongoId() :string|undefined {
+        return this._mongoId;
     }
 }
 
