@@ -3,7 +3,7 @@ export class Annotation {
 
     constructor() {
         this.value = {
-            type: 'http://www.w3.org/ns/oa#Annotation'
+            type: 'Annotation'
         }
     }
 
@@ -18,7 +18,7 @@ export class Annotation {
     private static toBody(body: any, type: string) {
         switch (type) {
             case 'bodyResource': return body;
-            case 'bodyText': return {type: 'http://www.w3.org/ns/oa#TextualBody', value: body.value}
+            case 'bodyText': return {type: 'TextualBody', value: body.value}
             default: return undefined;
         }
     }
@@ -28,10 +28,10 @@ export class Annotation {
             case 'targetResource': return target;
             case 'targetTextSelector': return Annotation.toTextSelector(target);
             case 'targetFragmentSelector': return {
-                type: 'http://www.w3.org/ns/oa#SpecificResource',
+                type: 'SpecificResource',
                 source: target.source,
                 selector: [{
-                    type: "http://www.w3.org/ns/oa#FragmentSelector",
+                    type: "FragmentSelector",
                     conformsTo: target.conformsTo,
                     value: target.value
                 }]
@@ -46,14 +46,14 @@ export class Annotation {
         }
 
         const result = {
-            type: 'http://www.w3.org/ns/oa#SpecificResource',
+            type: 'SpecificResource',
             source: target.source,
             selector: [] as any[]
         };
 
         if(target.textPositionSelector) {
             result.selector.push({
-                type: "http://www.w3.org/ns/oa#TextPositionSelector",
+                type: "TextPositionSelector",
                 start: target.textPositionSelector.start,
                 end: target.textPositionSelector.end
             })
@@ -61,7 +61,7 @@ export class Annotation {
 
         if(target.textQuoteSelector) {
             result.selector.push({
-                type: "http://www.w3.org/ns/oa#TextQuoteSelector",
+                type: "TextQuoteSelector",
                 exact: target.textQuoteSelector.exact,
                 prefix: target.textQuoteSelector.prefix,
                 suffix: target.textQuoteSelector.suffix

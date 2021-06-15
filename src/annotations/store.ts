@@ -7,11 +7,16 @@ import express from 'express';
 
 export class AnnotationStore extends DataSource {
 
-    private annotationBaseURI: string;
+    private readonly annotationBaseURI: string;
+    private readonly contextLinks: any[];
 
     constructor(private config: AnnotationStoreConfig) {
         super();
-        this.annotationBaseURI = `${ config.baseURI }${ config.annotationBasePath }`
+        this.annotationBaseURI = `${ config.baseURI }${ config.annotationBasePath }`;
+        this.contextLinks = [
+            'https://www.w3.org/ns/anno.jsonld',
+            {"anno": this.annotationBaseURI}
+        ]
     }
 
     public applyMiddleware(app: express.Application):void {
@@ -19,7 +24,7 @@ export class AnnotationStore extends DataSource {
         router.route('/:id')
             .get((req, res) => {
                 this.getAnnotationFromId(req.params.id).then((annotation:any) => {
-                    res.json(annotation)
+                    res.json(this.addContextLink(annotation))
                 },() => {
                     res.status(404).end();
                 })
@@ -27,9 +32,14 @@ export class AnnotationStore extends DataSource {
         app.use(this.config.annotationBasePath, router);
     }
 
+    private addContextLink(annotation: any): any {
+        annotation['@context'] = this.contextLinks;
+        return annotation;
+    }
+
     private cleanId(doc: any): any {
         if(doc) {
-            doc.id = `${this.annotationBaseURI}${doc._id}`;
+            doc.id = `anno:${doc._id}`;
             delete doc._id;
         }
         return doc;
@@ -62,7 +72,7 @@ export class AnnotationStore extends DataSource {
     private getAnnotation(_id: ObjectId): Promise<any> {
         return new Promise((resolve,reject) => {
             this.config.annotationsCollection.find({_id}).toArray((err, docs) => {
-                if(err) {
+                if(err || !docs || docs.length === 0) {
                     reject(err);
                 } else {
                     resolve(this.cleanId(docs[0]));
@@ -109,14 +119,22 @@ export class AnnotationStore extends DataSource {
     }
 
     private objectIdFromUrl(url: string): ObjectId {
-        if(!url.startsWith(this.annotationBaseURI)) {
-            throw new ValidationError(`annotation url is not correct, must start with ${this.annotationBaseURI}`);
-        }
-        try {
-            return new ObjectId(url.substr(url.lastIndexOf('/')+1));
-        } catch (err) {
-            console.error(err);
-            throw new ValidationError('annotation url is not correct, trailing id not valid')
+        if(url.startsWith(this.annotationBaseURI)) {
+            try {
+                return new ObjectId(url.substr(url.lastIndexOf('/')+1));
+            } catch (err) {
+                console.error(err);
+                throw new ValidationError('annotation url is not correct, trailing id not valid')
+            }
+        } else if(url.startsWith('anno')) {
+            try {
+                return new ObjectId(url.substr(url.lastIndexOf(':')+1));
+            } catch (err) {
+                console.error(err);
+                throw new ValidationError('annotation id is not correct, trailing id not valid')
+            }
+        } else {
+            throw new ValidationError('annotation url is not correct')
         }
     }
 }

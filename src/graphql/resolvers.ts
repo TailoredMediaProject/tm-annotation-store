@@ -23,7 +23,7 @@ const resolvers: IResolvers = {
     }),
     Target: {
         __resolveType(obj: {type: string}) {
-            if(obj.type === 'http://www.w3.org/ns/oa#SpecificResource') {
+            if(obj.type === 'SpecificResource') {
                 return 'SpecificResource'
             } else {
                 return 'TargetResource'
@@ -32,12 +32,12 @@ const resolvers: IResolvers = {
     },
     Selector: {
         __resolveType(obj: {type: string}) {
-            return obj.type.substring(24);
+            return obj.type;
         }
     },
     Body: {
         __resolveType(obj: {type: string}) {
-            if(obj.type === 'http://www.w3.org/ns/oa#TextualBody') {
+            if(obj.type === 'TextualBody') {
                 return 'BodyText'
             } else {
                 return 'BodyResource'

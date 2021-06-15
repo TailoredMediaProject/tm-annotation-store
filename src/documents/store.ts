@@ -24,6 +24,7 @@ export class DocumentStore {
                 this.getTextDocument(res, req.params.id)
             })
             .delete((req, res) => {
+                //TODO delete annotations, too
                 this.deleteTextDocument(res, req.params.id)
             });
         app.use(this.config.documentBasePath, router);
@@ -101,13 +102,13 @@ export class DocumentStore {
 
     private async setStatistics(doc: TextDocument): Promise<TextDocument> {
         doc.statistics.annotationCount = new AnnotationCount(
-            await this.count({'target.id':{'$eq': doc.getMongoId()}}),
-            await this.count({'target.source':{'$eq': doc.getMongoId()}})
+            await this.countFromAnnotationStore({'target.id':{'$eq': `${this.textDocumentBaseURI}${doc.id}`}}),
+            await this.countFromAnnotationStore({'target.source':{'$eq': `${this.textDocumentBaseURI}${doc.id}`}})
         )
         return doc;
     }
 
-    private async count(query:any):Promise<number> {
+    private async countFromAnnotationStore(query:any):Promise<number> {
         return new Promise((resolve) => {
             this.config.annotationsCollection.countDocuments(query, (err, count) => {
                 if(err) {
