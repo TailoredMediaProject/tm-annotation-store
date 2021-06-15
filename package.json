@@ -16,7 +16,7 @@
     "apollo-server": "^2.23.0",
     "graphql": "^15.5.0",
     "mongodb": "^3.6.6",
-    "@redlink/tm-annotation-store-api": "^1.1.1"
+    "@redlink/tm-annotation-store-api": "^2.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.13.15",

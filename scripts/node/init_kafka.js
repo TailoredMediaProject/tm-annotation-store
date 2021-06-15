@@ -2,7 +2,7 @@
 const axios = require('axios');
 const fs = require('fs');
 
-const SCHEMA_PATH = '../../../tm-annotation-store-api/api/avro/annotation/'
+const SCHEMA_PATH = './node_modules/@redlink/tm-annotation-store-api/api/avro/annotation/'
 const TOPIC_NAME = 'annotations';
 
 function getClusterId() {
