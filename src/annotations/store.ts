@@ -37,9 +37,9 @@ export class AnnotationStore extends DataSource {
         return annotation;
     }
 
-    private cleanId(doc: any): any {
+    private cleanId(doc: any, prefixed = false): any {
         if(doc) {
-            doc.id = `anno:${doc._id}`;
+            doc.id = `${prefixed ? 'anno:' : this.annotationBaseURI}${doc._id}`;
             delete doc._id;
         }
         return doc;
@@ -62,20 +62,20 @@ export class AnnotationStore extends DataSource {
     }
 
     public getAnnotationFromId(id: string): Promise<any> {
-        return this.getAnnotation(new ObjectId(id));
+        return this.getAnnotation(new ObjectId(id), true);
     }
 
     public getAnnotationFromUrl(url: string): Promise<any> {
         return this.getAnnotation(this.objectIdFromUrl(url));
     }
 
-    private getAnnotation(_id: ObjectId): Promise<any> {
+    private getAnnotation(_id: ObjectId, prefixed = false): Promise<any> {
         return new Promise((resolve,reject) => {
             this.config.annotationsCollection.find({_id}).toArray((err, docs) => {
                 if(err || !docs || docs.length === 0) {
                     reject(err);
                 } else {
-                    resolve(this.cleanId(docs[0]));
+                    resolve(this.cleanId(docs[0], prefixed));
                 }
             });
         });
