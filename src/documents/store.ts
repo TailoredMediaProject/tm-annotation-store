@@ -4,9 +4,13 @@ import express from 'express';
 import {DocumentStoreConfig} from './config';
 
 export class DocumentStore {
-    constructor(private config: DocumentStoreConfig) {}
+    private textDocumentBaseURI: string;
 
-    public applyMiddleware(app: express.Application, path: string = '/api/docs'):void {
+    constructor(private config: DocumentStoreConfig) {
+        this.textDocumentBaseURI = `${ config.baseURI }${ config.documentBasePath }texts/`
+    }
+
+    public applyMiddleware(app: express.Application):void {
         const router = express.Router();
         router.route('/texts')
             .get((req, res) => {
@@ -22,7 +26,7 @@ export class DocumentStore {
             .delete((req, res) => {
                 this.deleteTextDocument(res, req.params.id)
             });
-        app.use(path, router);
+        app.use(this.config.documentBasePath, router);
     }
 
     private listTextDocuments(res: any): void {
@@ -30,7 +34,7 @@ export class DocumentStore {
             if(err) {
                 DocumentStore.setError(res, 500, err.message);
             } else {
-                this.setStatisticsToDocuments(docs.map(d => TextDocument.fromStorage(d, this.config.documentBaseURI)))
+                this.setStatisticsToDocuments(docs.map(d => TextDocument.fromStorage(d, this.textDocumentBaseURI)))
                     .then(_docs => res.json(_docs));
             }
         });
@@ -39,11 +43,11 @@ export class DocumentStore {
     private createTextDocument(req: any, res: any): void {
         try {
             const document = TextDocument.fromRequest(req.body);
-            this.config.documentsCollection.insertOne(document, {}, (err, doc) => {
+            this.config.documentsCollection.insertOne({title:document.title, content:document.content}, {}, (err, doc) => {
                 if(err) {
                     DocumentStore.setError(res, 500, err.message);
                 } else {
-                    this.setStatistics(TextDocument.fromStorage(doc.ops[0], this.config.documentBaseURI))
+                    this.setStatistics(TextDocument.fromStorage(doc.ops[0], this.textDocumentBaseURI))
                         .then(_doc => res.status(201).json(_doc));
                 }
             })
@@ -62,7 +66,7 @@ export class DocumentStore {
                     if(docs.length === 0) {
                         DocumentStore.setError(res, 404, 'Not Found');
                     } else {
-                        this.setStatistics(TextDocument.fromStorage(docs[0], this.config.documentBaseURI))
+                        this.setStatistics(TextDocument.fromStorage(docs[0], this.textDocumentBaseURI))
                             .then(_doc => res.json(_doc));
                     }
                 }

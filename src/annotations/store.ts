@@ -3,16 +3,33 @@ import {ObjectId} from 'mongodb';
 import {Filter} from './model';
 import {AnnotationStoreConfig} from './config';
 import { ValidationError } from 'apollo-server';
+import express from 'express';
 
 export class AnnotationStore extends DataSource {
 
+    private annotationBaseURI: string;
+
     constructor(private config: AnnotationStoreConfig) {
         super();
+        this.annotationBaseURI = `${ config.baseURI }${ config.annotationBasePath }`
+    }
+
+    public applyMiddleware(app: express.Application):void {
+        const router = express.Router();
+        router.route('/:id')
+            .get((req, res) => {
+                this.getAnnotationFromId(req.params.id).then((annotation:any) => {
+                    res.json(annotation)
+                },() => {
+                    res.status(404).end();
+                })
+            })
+        app.use(this.config.annotationBasePath, router);
     }
 
     private cleanId(doc: any): any {
         if(doc) {
-            doc.id = `${this.config.annotationBaseURI}${doc._id}`;
+            doc.id = `${this.annotationBaseURI}${doc._id}`;
             delete doc._id;
         }
         return doc;
@@ -34,8 +51,15 @@ export class AnnotationStore extends DataSource {
         })
     }
 
-    getAnnotation(url: string): Promise<any> {
-        const _id = this.objectIdFromUrl(url);
+    public getAnnotationFromId(id: string): Promise<any> {
+        return this.getAnnotation(new ObjectId(id));
+    }
+
+    public getAnnotationFromUrl(url: string): Promise<any> {
+        return this.getAnnotation(this.objectIdFromUrl(url));
+    }
+
+    private getAnnotation(_id: ObjectId): Promise<any> {
         return new Promise((resolve,reject) => {
             this.config.annotationsCollection.find({_id}).toArray((err, docs) => {
                 if(err) {
@@ -85,8 +109,8 @@ export class AnnotationStore extends DataSource {
     }
 
     private objectIdFromUrl(url: string): ObjectId {
-        if(!url.startsWith(this.config.annotationBaseURI)) {
-            throw new ValidationError(`annotation url is not correct, must start with ${this.config.annotationBaseURI}`);
+        if(!url.startsWith(this.annotationBaseURI)) {
+            throw new ValidationError(`annotation url is not correct, must start with ${this.annotationBaseURI}`);
         }
         try {
             return new ObjectId(url.substr(url.lastIndexOf('/')+1));

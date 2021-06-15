@@ -7,9 +7,19 @@ docker-compose down
 echo 'remove docker data'
 rm -rf .docker/mongodb/data
 
-echo 'run mongo'
+echo 'run environment'
 docker-compose --env-file .env.dev up -d
+
 sleep 10
+
+echo 'init kafka'
+
+function init_kafka() {
+  npm i
+  node init_kafka.js
+}
+
+(cd ./scripts/node && init_kafka)
 
 echo 'install dependencies'
 npm i

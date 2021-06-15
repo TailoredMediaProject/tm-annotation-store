@@ -50,7 +50,7 @@ const resolvers: IResolvers = {
             return (context.dataSources.annotations as AnnotationStore).listAnnotations(filter);
         },
         annotation: (parent, args, context) => {
-            return (context.dataSources.annotations as AnnotationStore).getAnnotation(args.id);
+            return (context.dataSources.annotations as AnnotationStore).getAnnotationFromUrl(args.id);
         }
     },
     Mutation: {

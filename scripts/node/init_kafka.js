@@ -3,7 +3,7 @@ const axios = require('axios');
 const fs = require('fs');
 
 const SCHEMA_PATH = '../../../tm-annotation-store-api/api/avro/annotation/'
-const TOPIC_NAME = 'my-super-topic';
+const TOPIC_NAME = 'annotations';
 
 function getClusterId() {
     return axios.get(`http://localhost:8082/v3/clusters`).then((response) => {
@@ -49,5 +49,8 @@ getClusterId()
     .then(readSchema)
     .then(postSchema)
     .then(() =>
-        console.log('success')
-    );
+        console.log('successfully initialized kafka')
+    )
+    .catch((e) => {
+        console.log('ERROR', e);
+    });
