@@ -11,12 +11,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@redlink/tm-annotation-store-api": "^2.0.6",
+    "@types/hash-sum": "^1.0.0",
     "@types/mongodb": "^3.6.12",
     "apollo-datasource": "^0.8.0",
     "apollo-server": "^2.23.0",
     "graphql": "^15.5.0",
-    "mongodb": "^3.6.6",
-    "@redlink/tm-annotation-store-api": "^2.0.6"
+    "hash-sum": "^2.0.0",
+    "mongodb": "^3.6.6"
   },
   "devDependencies": {
     "@babel/core": "^7.13.15",

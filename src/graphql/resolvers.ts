@@ -64,7 +64,7 @@ const resolvers: IResolvers = {
             bodyResource, bodyText, targetResource, targetTextSelector, targetFragmentSelector
         }, context) => {
 
-            const annotation = new Annotation();
+            const annotation = Annotation.create();
 
             if(bodyResource) {
                 annotation.setBody(bodyResource, 'bodyResource')
@@ -84,7 +84,7 @@ const resolvers: IResolvers = {
                 throw new Error('Target has to be set');
             }
 
-            return (context.dataSources.annotations as AnnotationStore).pushAnnotation(annotation.getValue());
+            return (context.dataSources.annotations as AnnotationStore).pushAnnotation(annotation);
         }
     }
 };

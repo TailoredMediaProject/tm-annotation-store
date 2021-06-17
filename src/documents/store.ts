@@ -102,8 +102,8 @@ export class DocumentStore {
 
     private async setStatistics(doc: TextDocument): Promise<TextDocument> {
         doc.statistics.annotationCount = new AnnotationCount(
-            await this.countFromAnnotationStore({'target.id':{'$eq': `${this.textDocumentBaseURI}${doc.id}`}}),
-            await this.countFromAnnotationStore({'target.source':{'$eq': `${this.textDocumentBaseURI}${doc.id}`}})
+            await this.countFromAnnotationStore({'value.target.id':{'$eq': `${this.textDocumentBaseURI}${doc.id}`}}),
+            await this.countFromAnnotationStore({'value.target.source':{'$eq': `${this.textDocumentBaseURI}${doc.id}`}})
         )
         return doc;
     }

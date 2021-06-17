@@ -1,6 +1,6 @@
 import {DataSource} from 'apollo-datasource';
 import {ObjectId} from 'mongodb';
-import {Filter} from './model';
+import {Annotation, Filter} from './model';
 import {AnnotationStoreConfig} from './config';
 import { ValidationError } from 'apollo-server';
 import express from 'express';
@@ -14,8 +14,7 @@ export class AnnotationStore extends DataSource {
         super();
         this.annotationBaseURI = `${ config.baseURI }${ config.annotationBasePath }`;
         this.contextLinks = [
-            'https://www.w3.org/ns/anno.jsonld',
-            {"anno": this.annotationBaseURI}
+            'https://www.w3.org/ns/anno.jsonld'
         ]
     }
 
@@ -37,27 +36,15 @@ export class AnnotationStore extends DataSource {
         return annotation;
     }
 
-    private cleanId(doc: any, prefixed = false): any {
-        if(doc) {
-            doc.id = `${prefixed ? 'anno:' : this.annotationBaseURI}${doc._id}`;
-            delete doc._id;
-        }
-        return doc;
-    }
-
-    pushAnnotation(annotation: any): Promise<any> {
+    pushAnnotation(annotation: Annotation): Promise<any> {
         return new Promise((resolve, reject) => {
-            if(annotation._id || annotation.id) {
-                reject('annotation may not include id');
-            } else {
-                this.config.annotationsCollection.insertOne(annotation, {}, (err, doc) => {
-                    if(err) {
-                        reject(err);
-                    } else {
-                        resolve(this.cleanId(doc.ops[0]));
-                    }
-                })
-            }
+            this.config.annotationsCollection.insertOne(annotation.setHashSum(), {}, (err, doc) => {
+                if(err) {
+                    reject(err);
+                } else {
+                    resolve(Annotation.fromJson(doc.ops[0]).getValue(this.annotationBaseURI));
+                }
+            })
         })
     }
 
@@ -75,7 +62,7 @@ export class AnnotationStore extends DataSource {
                 if(err || !docs || docs.length === 0) {
                     reject(err);
                 } else {
-                    resolve(this.cleanId(docs[0], prefixed));
+                    resolve(Annotation.fromJson(docs[0]).getValue(this.annotationBaseURI));
                 }
             });
         });
@@ -87,7 +74,7 @@ export class AnnotationStore extends DataSource {
                 if(err) {
                     reject(err);
                 } else {
-                    resolve(docs.map(d => this.cleanId(d)));
+                    resolve(docs.map(d => Annotation.fromJson(d).getValue(this.annotationBaseURI)));
                 }
             });
         });
