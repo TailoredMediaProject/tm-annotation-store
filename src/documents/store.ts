@@ -4,7 +4,7 @@ import express from 'express';
 import {DocumentStoreConfig} from './config';
 
 export class DocumentStore {
-    private textDocumentBaseURI: string;
+    private readonly textDocumentBaseURI: string;
 
     constructor(private config: DocumentStoreConfig) {
         this.textDocumentBaseURI = `${ config.baseURI }${ config.documentBasePath }texts/`

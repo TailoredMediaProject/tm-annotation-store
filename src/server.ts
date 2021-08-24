@@ -7,50 +7,53 @@ import {DocumentStore} from './documents/store';
 
 const username = process.env.MONGO_INITDB_USERNAME || 'apollo';
 const password = process.env.MONGO_INITDB_PASSWORD || 'apollo';
+const dbHost = process.env.MONGO_HOST || 'localhost';
+const dbPort = +(process.env.MONGO_PORT || 27017);
 const database = process.env.MONGO_INITDB_DATABASE || 'annotations';
 const annotations = process.env.ANNOTATIONS_COLLECTION || 'annotations';
 const documents = process.env.DOCUMENTS_COLLECTION || 'documents';
 const port: number = +(process.env.SERVER_PORT || 4000);
-const baseURI = process.env.BASE_URI || `http://localhost:${ port }`
-const documentBasePath = `/resources/docs/`
-const annotationBasePath = `/resources/annotations/`
+const baseURI = process.env.BASE_URI || `http://localhost:${port}`;
+const documentBasePath = `/resources/docs/`;
+const annotationBasePath = `/resources/annotations/`;
 
-const mongo = new Mongo(username, password, database)
+const mongoConnect: string = (process.env.MONGO_CONNECT || `mongodb://${username}:${password}@${dbHost}:${dbPort}/${database}`)
+const mongo = new Mongo(mongoConnect);
 
-const run = async():Promise<any> => {
-    const app = express();
-    app.use(express.json());
+const run = async (): Promise<any> => {
+  const app = express();
+  app.use(express.json());
 
-    app.get('/', (req, res) => res.send('Server is up and running!'));
+  app.get('/', (req, res) => res.send('Server is up and running!'));
 
-    const annotationsCollection = await mongo.getCollection(annotations);
-    const documentsCollection = await mongo.getCollection(documents);
+  const annotationsCollection = await mongo.getCollection(annotations);
+  const documentsCollection = await mongo.getCollection(documents);
 
-    const annotationStore = new AnnotationStore({annotationsCollection, annotationBasePath, baseURI});
+  const annotationStore = new AnnotationStore({annotationsCollection, annotationBasePath, baseURI});
 
-    const apollo = new ApolloServer({
-        schema,
-        dataSources: () => ({
-            annotations: annotationStore
-        })
+  const apollo = new ApolloServer({
+    schema,
+    dataSources: () => ({
+      annotations: annotationStore,
+    }),
+  });
+  await apollo.start();
+  apollo.applyMiddleware({app});
+
+  const documentStore = new DocumentStore({documentsCollection, annotationsCollection, documentBasePath, baseURI});
+  documentStore.applyMiddleware(app);
+
+  annotationStore.applyMiddleware(app);
+
+  const server = await new Promise(resolve => {
+    const s = app.listen({port}, () => {
+      resolve(s);
     });
-    await apollo.start();
-    apollo.applyMiddleware({app});
+  });
 
-    const documentStore = new DocumentStore({documentsCollection, annotationsCollection, documentBasePath, baseURI});
-    documentStore.applyMiddleware(app);
-
-    annotationStore.applyMiddleware(app);
-
-    const server = await new Promise(resolve => {
-        const s = app.listen({ port },() => {
-            resolve(s)
-        })
-    });
-
-    return {server, apollo};
-}
+  return {server, apollo};
+};
 
 run().then(({server, apollo}) => {
-    console.log(`🚀 Server ready at http://localhost:${server.address().port}${apollo.graphqlPath}`)
+  console.log(`🚀 Server ready at http://localhost:${server.address().port}${apollo.graphqlPath}`);
 });

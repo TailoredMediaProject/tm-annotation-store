@@ -3,8 +3,8 @@ import {Collection, MongoClient} from 'mongodb';
 export class Mongo {
     private client: MongoClient;
 
-    constructor(username: string, password: string, database: string) {
-        this.client = new MongoClient(`mongodb://${username}:${password}@127.0.0.1:27017/${database}`);
+    constructor(connectString: string) {
+        this.client = new MongoClient(connectString);
     }
 
     getCollection(collectionName: string): Promise<Collection> {
