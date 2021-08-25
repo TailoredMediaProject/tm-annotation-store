@@ -5,11 +5,11 @@ import {Mongo} from './mongo';
 import {AnnotationStore} from './annotations/store';
 import {DocumentStore} from './documents/store';
 
-const username = process.env.MONGO_INITDB_USERNAME || 'apollo';
-const password = process.env.MONGO_INITDB_PASSWORD || 'apollo';
+const username = process.env.MONGO_USERNAME || 'apollo';
+const password = process.env.MONGO_PASSWORD || 'apollo';
 const dbHost = process.env.MONGO_HOST || 'localhost';
 const dbPort = +(process.env.MONGO_PORT || 27017);
-const database = process.env.MONGO_INITDB_DATABASE || 'annotations';
+const database = process.env.MONGO_DATABASE || 'annotations';
 const annotations = process.env.ANNOTATIONS_COLLECTION || 'annotations';
 const documents = process.env.DOCUMENTS_COLLECTION || 'documents';
 const port: number = +(process.env.SERVER_PORT || 4000);
@@ -17,8 +17,8 @@ const baseURI = process.env.BASE_URI || `http://localhost:${port}`;
 const documentBasePath = `/resources/docs/`;
 const annotationBasePath = `/resources/annotations/`;
 
-const mongoConnect: string = (process.env.MONGO_CONNECT || `mongodb://${username}:${password}@${dbHost}:${dbPort}/${database}`)
-const mongo = new Mongo(mongoConnect);
+const mongoConnect: string = (process.env.MONGO_CONNECT || `mongodb://${username}:${password}@${dbHost}:${dbPort}`)
+const mongo = new Mongo(mongoConnect, database);
 
 const run = async (): Promise<any> => {
   const app = express();
@@ -55,5 +55,5 @@ const run = async (): Promise<any> => {
 };
 
 run().then(({server, apollo}) => {
-  console.log(`🚀 Server ready at http://localhost:${server.address().port}${apollo.graphqlPath}`);
+  console.log(`Server ready at http://localhost:${server.address().port}${apollo.graphqlPath}`);
 });

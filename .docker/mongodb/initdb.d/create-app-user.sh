@@ -1,17 +1,17 @@
 #!/bin/bash
 set -e
 
-echo "=== Try to createUser $MONGO_INITDB_USERNAME === "
+echo "=== Try to createUser $MONGO_USERNAME === "
 
-mongo -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase "$rootAuthDatabase" "$MONGO_INITDB_DATABASE" <<EOF
+mongo -u "$MONGO_ROOT_USERNAME" -p "$MONGO_ROOT_PASSWORD" --authenticationDatabase "$rootAuthDatabase" "$MONGO_DATABASE" <<EOF
 db.createUser({
-  user: '$MONGO_INITDB_USERNAME',
-  pwd:  '$MONGO_INITDB_PASSWORD',
+  user: '$MONGO_USERNAME',
+  pwd:  '$MONGO_PASSWORD',
   roles: [{
     role: 'readWrite',
-    db: '$MONGO_INITDB_DATABASE'
+    db: '$MONGO_DATABASE'
   }]
 })
 EOF
 
-echo "=== User $MONGO_INITDB_USERNAME created === "
+echo "=== User $MONGO_USERNAME created === "
