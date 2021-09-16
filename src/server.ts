@@ -19,7 +19,6 @@ const annotationBasePath = `/resources/annotations/`;
 
 /*const connectString = `mongodb://${username}:${password}@${dbHost}:${dbPort}`;*/
 const connectString = `mongodb://${dbHost}:${dbPort}`;
-console.log(connectString)
 const mongoConnect: string = (process.env.MONGO_CONNECT || connectString)
 const mongo = new Mongo(mongoConnect, database);
 
