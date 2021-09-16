@@ -53,6 +53,7 @@ export class DocumentStore {
                 }
             })
         } catch (err) {
+            // @ts-ignore
             DocumentStore.setError(res, 400, err.message);
         }
     }
