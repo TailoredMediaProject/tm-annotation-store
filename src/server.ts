@@ -4,6 +4,8 @@ import {ApolloServer} from 'apollo-server-express';
 import {Mongo} from './mongo';
 import {AnnotationStore} from './annotations/store';
 import {DocumentStore} from './documents/store';
+import {KafkaClient} from "./kafka/KafkaClient";
+import {KafkaTest} from "./kafka/KafkaTest";
 
 const username = process.env.MONGO_USERNAME || 'apollo';
 const password = process.env.MONGO_PASSWORD || 'apollo';
@@ -17,10 +19,16 @@ const baseURI = process.env.BASE_URI || `http://localhost:${port}`;
 const documentBasePath = `/resources/docs/`;
 const annotationBasePath = `/resources/annotations/`;
 
+const kafkaBroker = process.env.KAFKA_BROKER?.split(',') || ['localhost:9092'];
+const kafkaConsumerGroupId = process.env.KAFKA_CONSUMER_GROUP_ID?.split(',') || ['test-group'];
+const kafkaClientId = process.env.KAFKA_CLIENT_ID || 'tm-annotation_store';
+
 /*const connectString = `mongodb://${username}:${password}@${dbHost}:${dbPort}`;*/
 const connectString = `mongodb://${dbHost}:${dbPort}`;
 const mongoConnect: string = (process.env.MONGO_CONNECT || connectString)
 const mongo = new Mongo(mongoConnect, database);
+const kafka = KafkaClient.createClient(kafkaBroker, kafkaConsumerGroupId, kafkaClientId);
+let consumerID: number;
 
 const run = async (): Promise<any> => {
   const app = express();
@@ -47,6 +55,7 @@ const run = async (): Promise<any> => {
 
   annotationStore.applyMiddleware(app);
 
+  const test = new KafkaTest();
   const server = await new Promise(resolve => {
     const s = app.listen({port}, () => {
       resolve(s);
@@ -58,4 +67,7 @@ const run = async (): Promise<any> => {
 
 run().then(({server, apollo}) => {
   console.log(`Server ready at http://localhost:${server.address().port}${apollo.graphqlPath}`);
+}).catch(error => {
+  console.log(error);
+  kafka.shutdown().then(() => console.log('Disconnected from Kafka!'));
 });
