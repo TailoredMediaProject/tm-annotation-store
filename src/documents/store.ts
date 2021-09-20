@@ -30,6 +30,8 @@ export class DocumentStore {
         app.use(this.config.documentBasePath, router);
     }
 
+
+
     private listTextDocuments(res: any): void {
         this.config.documentsCollection.find().toArray((err, docs) => {
             if(err) {
