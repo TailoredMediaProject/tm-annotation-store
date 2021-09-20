@@ -67,4 +67,7 @@ const run = async (): Promise<any> => {
 
 run().then(({server, apollo}) => {
   console.log(`Server ready at http://localhost:${server.address().port}${apollo.graphqlPath}`);
+}).catch(error => {
+  console.log(error);
+  kafka.shutdown().then(() => console.log('Disconnected from Kafka!'));
 });

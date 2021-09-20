@@ -2,18 +2,21 @@ import {CompressionTypes, Kafka, Message, Producer, ProducerConfig, RecordMetada
 
 export class KafkaProducer {
     private readonly producer: Producer;
+    private readonly topic: string;
 
-    constructor(kafka: Kafka, config?: ProducerConfig) {
+    constructor(kafka: Kafka, topic: string, config?: ProducerConfig) {
         this.producer = kafka.producer(config);
+        this.topic = topic;
+        this.connect().then(() => 'Producer Connected!').catch(console.log);
     }
 
-    async connect(): Promise<void> {
+    private async connect(): Promise<void> {
         return this.producer.connect();
     }
 
-    async sendMessages(topic: string, messages: Message[], compression?: CompressionTypes): Promise<RecordMetadata[]> {
+    async sendMessages(messages: Message[], compression?: CompressionTypes): Promise<RecordMetadata[]> {
         return this.producer.send({
-            topic,
+            topic: this.topic,
             messages,
             compression
         });

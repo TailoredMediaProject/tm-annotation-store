@@ -6,10 +6,9 @@ import {ConsumerObserver} from "./ConsumerObserver";
 export class KafkaClient {
     private static client: KafkaClient;
     private readonly kafka: Kafka;
-    private readonly producer: KafkaProducer[] = [];
-    private readonly consumer: { [key: number]: KafkaConsumer } = {};
+    private producer: {[key: string]: KafkaProducer} = {};
+    private consumer: { [key: string]: KafkaConsumer } = {};
     private subscribedTopics: (string | RegExp)[] = [];
-    private consumerCount = 0;
 
     private constructor(brokers: string[], consumerGroupId: string[], clientId?: string) {
         this.kafka = new Kafka({clientId, brokers, logLevel: logLevel.NOTHING});
@@ -29,24 +28,28 @@ export class KafkaClient {
         return this.client;
     }
 
-    private createProducer(): void {
-        this.producer.push(new KafkaProducer(this.kafka));
+    createProducer(topic: string): string {
+        if (this.subscribedTopics.some(value => value === topic)) {
+            throw new Error('The topic "' + topic + '" is already a consumer topic!');
+        }
+        if (!(topic in this.producer)) {
+            this.producer[topic] = new KafkaProducer(this.kafka, topic);
+        }
+        return topic;
     }
 
-    createConsumer(observer: ConsumerObserver, groupId: string): number {
-        const newConsumer = new KafkaConsumer(this.kafka, {groupId});
-        newConsumer.addObserver(observer);
-        const key = this.consumerCount++;
-        this.consumer[key] = newConsumer;
-        return key;
+    createConsumer(observer: ConsumerObserver, groupId: string): string {
+        if (!(groupId in this.consumer)) {
+            this.consumer[groupId] = new KafkaConsumer(this.kafka, {groupId});
+        }
+        this.consumer[groupId].addObserver(observer);
+        return groupId;
     }
 
-    /*private async connect(): Promise<void> {
-        console.log('Connecting...');
-        return await Promise.all([this.producer.connect(), this.consumer.connect()]).then(() => console.log('Connected!'));
-    }*/
-
-    async subscribe(consumerId: number, topic: string | RegExp): Promise<void> {
+    async subscribe(consumerId: string, topic: string | RegExp): Promise<void> {
+        if (topic.toString() in this.producer) {
+            throw new Error('Topic "' + topic + '" is already a producer topic!');
+        }
         const consumer = this.getConsumer(consumerId);
         if (consumer) {
             consumer.subscribe(topic).then(() => {
@@ -57,27 +60,39 @@ export class KafkaClient {
         }
     }
 
- /*   async sendMessage(topic: string, messages: Message[]): Promise<RecordMetadata[]> {
-        return this.producer.sendMessages(topic, messages);
-    }*/
-
-    async shutdownConsumer(): Promise<void> {
-        for (const key in this.consumer) {
-            await this.consumer[key];
+    async sendMessage(topic: string, messages: Message[]): Promise<RecordMetadata[]> {
+        if (!(topic in this.producer)) {
+            throw new Error('No producer with topic "' + topic + '" found!');
         }
+        return this.producer[topic].sendMessages(messages);
     }
 
-    private getConsumer(id: number): KafkaConsumer {
-        if (id >= 0 && id < this.consumerCount && id in this.consumer) {
+    private getConsumer(id: string): KafkaConsumer {
+        if (id in this.consumer) {
             return this.consumer[id];
         }
         throw new Error('Kafka consumer not found!');
     }
 
+    async shutdownConsumers(): Promise<void> {
+        const consumers: KafkaConsumer[] = Object.values(this.consumer);
+        if (consumers.length > 0) {
+            return Promise.all(consumers.map(consumer => consumer.shutdown())).then(() => {
+                this.consumer = {};
+            });
+        }
+    }
 
-    /*async disconnect(): Promise<void> {
-        console.log('Disconnecting...');
-        await this.consumer.forEach(consumer).stopListen();
-        return await Promise.all([this.producer.disconnect(), this.consumer.disconnect()]).then(() => console.log('Disconnected!'));
-    }*/
+    async shutdownProducers(): Promise<void> {
+        const producers: KafkaProducer[] = Object.values(this.producer);
+        if (producers.length > 0) {
+            return Promise.all(producers.map(producers => producers.disconnect())).then(() => {
+                this.producer = {};
+            });
+        }
+    }
+
+    async shutdown(): Promise<void> {
+        return Promise.all([this.shutdownConsumers(), this.shutdownProducers()]).then();
+    }
 }
