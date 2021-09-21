@@ -4,7 +4,7 @@ import {ApolloServer} from 'apollo-server-express';
 import {Mongo} from './mongo';
 import {AnnotationStore} from './annotations/store';
 import {DocumentStore} from './documents/store';
-import {KafkaClient} from "./kafka/KafkaClient";
+import {KafkaClient} from "./kafka/kafkaClient/KafkaClient";
 import {KafkaTest} from "./kafka/KafkaTest";
 
 const username = process.env.MONGO_USERNAME || 'apollo';
@@ -28,7 +28,6 @@ const connectString = `mongodb://${dbHost}:${dbPort}`;
 const mongoConnect: string = (process.env.MONGO_CONNECT || connectString)
 const mongo = new Mongo(mongoConnect, database);
 const kafka = KafkaClient.createClient(kafkaBroker, kafkaConsumerGroupId, kafkaClientId);
-let consumerID: number;
 
 const run = async (): Promise<any> => {
   const app = express();
@@ -55,7 +54,6 @@ const run = async (): Promise<any> => {
 
   annotationStore.applyMiddleware(app);
 
-  const test = new KafkaTest();
   const server = await new Promise(resolve => {
     const s = app.listen({port}, () => {
       resolve(s);

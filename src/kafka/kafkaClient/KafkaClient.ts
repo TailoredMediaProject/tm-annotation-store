@@ -1,7 +1,7 @@
 import {Kafka, logLevel, Message, RecordMetadata} from "kafkajs";
 import {KafkaConsumer} from "./KafkaConsumer";
 import {KafkaProducer} from "./KafkaProducer";
-import {ConsumerObserver} from "./ConsumerObserver";
+import {IConsumerObserver} from "./IConsumerObserver";
 
 export class KafkaClient {
     private static client: KafkaClient;
@@ -38,7 +38,7 @@ export class KafkaClient {
         return topic;
     }
 
-    createConsumer(observer: ConsumerObserver, groupId: string): string {
+    createConsumer(observer: IConsumerObserver, groupId: string): string {
         if (!(groupId in this.consumer)) {
             this.consumer[groupId] = new KafkaConsumer(this.kafka, {groupId});
         }
@@ -46,16 +46,18 @@ export class KafkaClient {
         return groupId;
     }
 
-    async subscribe(consumerId: string, topic: string | RegExp): Promise<void> {
+    async subscribe(consumerId: string, topic: string | RegExp, fromBeginning: boolean = false): Promise<void> {
         if (topic.toString() in this.producer) {
             throw new Error('Topic "' + topic + '" is already a producer topic!');
         }
         const consumer = this.getConsumer(consumerId);
         if (consumer) {
-            consumer.subscribe(topic).then(() => {
+            return consumer.subscribe(topic, fromBeginning).then(() => {
                 if (this.subscribedTopics.some(value => value === topic)) {
                     this.subscribedTopics.push(topic);
                 }
+            }).catch(error => {
+                console.log(error);
             });
         }
     }
