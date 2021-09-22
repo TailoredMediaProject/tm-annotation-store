@@ -5,7 +5,7 @@ import {IMessageManagerConfig} from "../messageManager/IMessageManagerConfig";
 
 export class AnnotationMessageManager extends MessageManager {
     private readonly annotationStore: AnnotationStore;
-    constructor(messageManagerConfig: IMessageManagerConfig, annotationStore: AnnotationStore) {
+    constructor(messageManagerConfig: IMessageManagerConfig | IMessageManagerConfig[], annotationStore: AnnotationStore) {
         super(messageManagerConfig);
         this.annotationStore = annotationStore;
     }

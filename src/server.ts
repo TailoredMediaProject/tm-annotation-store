@@ -6,6 +6,7 @@ import {AnnotationStore} from './annotations/store';
 import {DocumentStore} from './documents/store';
 import {KafkaClient} from "./kafka/kafkaClient/KafkaClient";
 import {KafkaTest} from "./kafka/KafkaTest";
+import {DocumentMessageManager} from "./kafka/documents/DocumentMessageManager";
 
 const username = process.env.MONGO_USERNAME || 'apollo';
 const password = process.env.MONGO_PASSWORD || 'apollo';
@@ -23,11 +24,12 @@ const kafkaBroker = process.env.KAFKA_BROKER?.split(',') || ['localhost:9092'];
 const kafkaConsumerGroupId = process.env.KAFKA_CONSUMER_GROUP_ID?.split(',') || ['test-group'];
 const kafkaClientId = process.env.KAFKA_CLIENT_ID || 'tm-annotation_store';
 
+const connectString = `mongodb://root:root@${dbHost}:${dbPort}`;
 /*const connectString = `mongodb://${username}:${password}@${dbHost}:${dbPort}`;*/
-const connectString = `mongodb://${dbHost}:${dbPort}`;
+/*const connectString = `mongodb://${dbHost}:${dbPort}`;*/
 const mongoConnect: string = (process.env.MONGO_CONNECT || connectString)
 const mongo = new Mongo(mongoConnect, database);
-const kafka = KafkaClient.createClient(kafkaBroker, kafkaConsumerGroupId, kafkaClientId);
+/*const kafka = KafkaClient.createClient(kafkaBroker, kafkaConsumerGroupId, kafkaClientId);*/
 
 const run = async (): Promise<any> => {
   const app = express();
@@ -54,18 +56,24 @@ const run = async (): Promise<any> => {
 
   annotationStore.applyMiddleware(app);
 
+  /*const documentMessageManager = new DocumentMessageManager({groupId: kafkaConsumerGroupId[0], topic: 'testTopic', fromBeginning: false}, documentStore);*/
+
   const server = await new Promise(resolve => {
     const s = app.listen({port}, () => {
       resolve(s);
     });
-  });
+  })/*.catch((error) => {
+    console.error(error);
+    documentMessageManager.shutdown();
+  });*/
 
   return {server, apollo};
 };
 
 run().then(({server, apollo}) => {
   console.log(`Server ready at http://localhost:${server.address().port}${apollo.graphqlPath}`);
-}).catch(error => {
+})/*.catch(error => {
   console.log(error);
+
   kafka.shutdown().then(() => console.log('Disconnected from Kafka!'));
-});
+});*/

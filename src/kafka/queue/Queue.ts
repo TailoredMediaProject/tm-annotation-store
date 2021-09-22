@@ -30,11 +30,20 @@ export class Queue<T> {
     private pushToObserver(): void {
         if (this.observer && this.hasNext() && !this.isRunning) {
             this.isRunning = true;
-            this.observer.queuePushesNext(this.queue[0]).then(() => {
-                this.queue.shift();
-                this.isRunning = false;
-                this.pushToObserver();
-            });
+            this.observer.queuePushesNext(this.queue[0])
+                .then(() => {
+                    console.log('Successful push!')
+                })
+                .catch(error => {
+                    console.error('Unsuccessful push!');
+                    console.error('Queue error', error);
+                })
+                .finally(() => {
+                    console.log('Release...');
+                    this.queue.shift();
+                    this.isRunning = false;
+                    this.pushToObserver();
+                });
         }
     }
 

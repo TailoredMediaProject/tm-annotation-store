@@ -6,7 +6,7 @@ import {ObjectId} from "mongodb";
 export class DocumentMessageManager extends MessageManager {
     private readonly documentStore: DocumentStore;
 
-    constructor(messageManagerConfig: IMessageManagerConfig, documentStore: DocumentStore) {
+    constructor(messageManagerConfig: IMessageManagerConfig | IMessageManagerConfig[], documentStore: DocumentStore) {
         super(messageManagerConfig);
         this.documentStore = documentStore;
     }
@@ -17,9 +17,10 @@ export class DocumentMessageManager extends MessageManager {
                 this.documentStore.createDocument(content, {}, (error, doc) => {
                     if (error) {
                         console.error('Error: Creating a document had an error: ', error);
-                        reject(error);
+                        return reject(error);
                     }
                     console.log('Successfully added a text document!');
+                    console.log('Doc:', doc);
                     resolve(doc);
                 });
             } catch (error) {
@@ -36,7 +37,7 @@ export class DocumentMessageManager extends MessageManager {
                 this.documentStore.deleteDocument(id, (error) => {
                     if (error) {
                         console.error('Error deleting document: ', error);
-                        reject(error);
+                        return reject(error);
                     } else {
                         console.log('Deleted document!');
                         resolve();

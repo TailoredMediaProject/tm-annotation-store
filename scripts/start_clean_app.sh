@@ -5,8 +5,8 @@ echo 'shutdown existing environment'
 docker-compose down
 
 echo 'remove docker data'
-rm -rf .docker/mongodb/data/*
-mkdir -p .docker/mongodb/data
+rm -rf ../.docker/mongodb/data/*
+mkdir -p ../.docker/mongodb/data ../.docker/mongodb/data/db ../.docker/mongodb/data/log
 
 echo 'run environment'
 docker-compose --env-file ../.env.dev up -d

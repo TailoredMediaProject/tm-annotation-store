@@ -9,14 +9,17 @@ export abstract class MessageManager implements IConsumerObserver, IQueueProtoco
     private readonly kafkaClient: KafkaClient;
     private readonly messageQueue: Queue<IReceivedKafkaMessage>;
 
-    protected constructor(config: IMessageManagerConfig) {
+    protected constructor(config: IMessageManagerConfig | IMessageManagerConfig[]) {
         this.messageQueue = new Queue<IReceivedKafkaMessage>(this);
         this.kafkaClient = KafkaClient.getClient();
+        if (!Array.isArray(config)) {
+            config = [config];
+        }
         this.setup(config);
     }
 
-    private setup(config: IMessageManagerConfig): void {
-        for (const consumer of config.consumer) {
+    private setup(config: IMessageManagerConfig[]): void {
+        for (const consumer of config) {
             this.kafkaClient
                 .subscribe(
                     this.kafkaClient.createConsumer(this, consumer.groupId),
@@ -40,14 +43,17 @@ export abstract class MessageManager implements IConsumerObserver, IQueueProtoco
                 return this.delete(element.topic, element.message.value);
             default:
                 console.error('ERROR: No method added!');
-                return Promise.resolve();
+                return Promise.reject('No Method added!');
         }
     }
 
     private static getMethod(receivedMessage: IReceivedKafkaMessage): MessageMethod {
         const headers = receivedMessage.message.headers;
         if (headers && MessageHeader.METHOD in headers && headers[MessageHeader.METHOD]) {
-            return <MessageMethod>headers[MessageHeader.METHOD]
+            const method = headers[MessageHeader.METHOD];
+            if (method && method.toString() in MessageMethod) {
+                return MessageMethod[method.toString() as keyof typeof MessageMethod];
+            }
         }
         return MessageMethod.NON;
     }
