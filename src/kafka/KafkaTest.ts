@@ -1,8 +1,8 @@
-import {ConsumerObserver} from "./ConsumerObserver";
-import {KafkaClient} from "./KafkaClient";
+import {IConsumerObserver, IReceivedKafkaMessage} from "./kafkaClient/IConsumerObserver";
+import {KafkaClient} from "./kafkaClient/KafkaClient";
 import {KafkaMessage} from "kafkajs";
 
-export class KafkaTest implements ConsumerObserver {
+export class KafkaTest implements IConsumerObserver {
 
     private consumerId: string;
     private producerId: string;
@@ -14,17 +14,17 @@ export class KafkaTest implements ConsumerObserver {
         this.producerId = this.kafkaClient.createProducer('testProducer');
     }
 
-    didReceiveNewMessage(topic: string, message: KafkaMessage): void {
+    didReceiveNewMessage(message:IReceivedKafkaMessage): void {
         console.log('Kafka test: ');
-        console.log(topic, message);
-        console.log(message.value?.toString());
-        if (message.value) {
-            this.sendMessage(message.value.toString());
+        console.log(message.topic, message.message);
+        console.log(message.message.value?.toString());
+        if (message.message.value) {
+            this.sendMessage(message.message.value.toString());
         }
     }
 
     sendMessage(message: string): void {
         console.log('Sending Messages...');
-        this.kafkaClient.sendMessage(this.producerId, [{key: this.producerId, value: message + ' (Producer-Ack)'}]).then(console.log);
+        this.kafkaClient.sendMessage(this.producerId, [{key: this.producerId, value: message + ' (Producer-Ack)', headers: {'nvoen': 'Hello'}}]).then(console.log);
     }
 }

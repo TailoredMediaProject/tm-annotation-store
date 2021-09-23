@@ -1,15 +1,15 @@
 import {Consumer, ConsumerConfig, Kafka} from "kafkajs";
-import {ConsumerObserver} from "./ConsumerObserver";
+import {IConsumerObserver} from "./IConsumerObserver";
 
 export class KafkaConsumer {
     private readonly consumer: Consumer;
-    private observations: ConsumerObserver[] = [];
+    private observations: IConsumerObserver[] = [];
 
     constructor(kafka: Kafka, config?: ConsumerConfig) {
         this.consumer = kafka.consumer(config)
     }
 
-    addObserver(observer: ConsumerObserver): void {
+    addObserver(observer: IConsumerObserver): void {
         if (this.observations.some(value => value === observer)) {
             return;
         }
@@ -19,7 +19,7 @@ export class KafkaConsumer {
         }
     }
 
-    removeObserver(observer: ConsumerObserver): void {
+    removeObserver(observer: IConsumerObserver): void {
         const observerKey = this.getObserverKey(observer);
         if (observerKey > -1) {
             delete this.observations[observerKey];
@@ -30,7 +30,7 @@ export class KafkaConsumer {
         }
     }
 
-    private getObserverKey(object: ConsumerObserver): number {
+    private getObserverKey(object: IConsumerObserver): number {
         for (const [key, observer] of this.observations.entries()) {
             if (observer === object) {
                 return key;
@@ -43,29 +43,15 @@ export class KafkaConsumer {
         return this.consumer.connect();
     }
 
-    async subscribe(topic: string | RegExp): Promise<void> {
-        return this.consumer.subscribe({topic, fromBeginning: true});
+    async subscribe(topic: string | RegExp, fromBeginning: boolean): Promise<void> {
+        return this.consumer.subscribe({topic, fromBeginning});
     }
-
-   /* async pause(topic: string): Promise<void> {
-        return this.consumer.pause([{topic}]);
-    }
-
-    resume(topic: string): void {
-        if (this.paused(topic)) {
-            this.consumer.resume([{topic}]);
-        }
-    }*/
-
-   /* private paused(topic: string): boolean {
-        return this.consumer.paused().some(value => value.topic === topic)
-    }*/
 
     async listen(): Promise<void> {
         return this.consumer.run({
             eachMessage: async ({topic, partition, message}) => {
                 try {
-                    this.observations.forEach(observer => observer.didReceiveNewMessage(topic, message));
+                    this.observations.forEach(observer => observer.didReceiveNewMessage({topic, partition, message}));
                 } catch (e) {
                     console.log(e);
                 }

@@ -1,7 +1,7 @@
 import {Kafka, logLevel, Message, RecordMetadata} from "kafkajs";
 import {KafkaConsumer} from "./KafkaConsumer";
 import {KafkaProducer} from "./KafkaProducer";
-import {ConsumerObserver} from "./ConsumerObserver";
+import {IConsumerObserver} from "./IConsumerObserver";
 
 export class KafkaClient {
     private static client: KafkaClient;
@@ -10,13 +10,13 @@ export class KafkaClient {
     private consumer: { [key: string]: KafkaConsumer } = {};
     private subscribedTopics: (string | RegExp)[] = [];
 
-    private constructor(brokers: string[], consumerGroupId: string[], clientId?: string) {
-        this.kafka = new Kafka({clientId, brokers, logLevel: logLevel.NOTHING});
+    private constructor(brokers: string[], clientId?: string, consumerGroupId?: string[]) {
+        this.kafka = new Kafka({clientId, brokers, logLevel: logLevel.INFO});
     }
 
-    public static createClient(brokers: string[], consumerGroupId: string[], clientId?: string): KafkaClient {
+    public static createClient(brokers: string[], clientId?: string, consumerGroupId?: string[]): KafkaClient {
         if (!this.client) {
-            this.client = new KafkaClient(brokers, consumerGroupId, clientId);
+            this.client = new KafkaClient(brokers, clientId, consumerGroupId);
         }
         return this.client;
     }
@@ -38,7 +38,7 @@ export class KafkaClient {
         return topic;
     }
 
-    createConsumer(observer: ConsumerObserver, groupId: string): string {
+    createConsumer(observer: IConsumerObserver, groupId: string): string {
         if (!(groupId in this.consumer)) {
             this.consumer[groupId] = new KafkaConsumer(this.kafka, {groupId});
         }
@@ -46,16 +46,18 @@ export class KafkaClient {
         return groupId;
     }
 
-    async subscribe(consumerId: string, topic: string | RegExp): Promise<void> {
+    async subscribe(consumerId: string, topic: string | RegExp, fromBeginning: boolean = false): Promise<void> {
         if (topic.toString() in this.producer) {
             throw new Error('Topic "' + topic + '" is already a producer topic!');
         }
         const consumer = this.getConsumer(consumerId);
         if (consumer) {
-            consumer.subscribe(topic).then(() => {
+            return consumer.subscribe(topic, fromBeginning).then(() => {
                 if (this.subscribedTopics.some(value => value === topic)) {
                     this.subscribedTopics.push(topic);
                 }
+            }).catch(error => {
+                console.log(error);
             });
         }
     }
@@ -80,6 +82,26 @@ export class KafkaClient {
             return Promise.all(consumers.map(consumer => consumer.shutdown())).then(() => {
                 this.consumer = {};
             });
+        }
+    }
+
+    async shutdownProducerWithTopics(topics: string[]): Promise<void> {
+        for (const topic of topics) {
+            if (topic in this.producer) {
+                return this.producer[topic].disconnect().then(() => {
+                    delete this.producer[topic];
+                });
+            }
+        }
+    }
+
+    async shutdownConsumersWithGroupId(groupId: string[]): Promise<void> {
+        for (const groupIdKey in groupId) {
+            if (groupIdKey in this.consumer) {
+                this.consumer[groupIdKey].shutdown().then(() => {
+                    delete this.consumer[groupIdKey];
+                });
+            }
         }
     }
 

@@ -4,8 +4,9 @@ import {ApolloServer} from 'apollo-server-express';
 import {Mongo} from './mongo';
 import {AnnotationStore} from './annotations/store';
 import {DocumentStore} from './documents/store';
-import {KafkaClient} from "./kafka/KafkaClient";
-import {KafkaTest} from "./kafka/KafkaTest";
+import {KafkaClient} from "./kafka/kafkaClient/KafkaClient";
+import {DocumentMessageManager} from "./kafka/documents/DocumentMessageManager";
+import {AnnotationMessageManager} from "./kafka/annotations/AnnotationMessageManager";
 
 const username = process.env.MONGO_USERNAME || 'apollo';
 const password = process.env.MONGO_PASSWORD || 'apollo';
@@ -16,19 +17,20 @@ const annotations = process.env.ANNOTATIONS_COLLECTION || 'annotations';
 const documents = process.env.DOCUMENTS_COLLECTION || 'documents';
 const port: number = +(process.env.SERVER_PORT || 4000);
 const baseURI = process.env.BASE_URI || `http://localhost:${port}`;
-const documentBasePath = `/resources/docs/`;
-const annotationBasePath = `/resources/annotations/`;
+const documentBasePath = `/api/docs/`;
+const annotationBasePath = `/api/annotations/`;
 
 const kafkaBroker = process.env.KAFKA_BROKER?.split(',') || ['localhost:9092'];
-const kafkaConsumerGroupId = process.env.KAFKA_CONSUMER_GROUP_ID?.split(',') || ['test-group'];
+const kafkaConsumerGroupId = process.env.KAFKA_CONSUMER_GROUP_ID?.split(',') || ['testDocumentStoreGroup', 'testAnnotationStoreGroup'];
+const kafkaConsumerTopics = ['testDocumentTopic', 'testAnnotationTopic'];
 const kafkaClientId = process.env.KAFKA_CLIENT_ID || 'tm-annotation_store';
 
+const connectString = `mongodb://root:root@${dbHost}:${dbPort}`;
 /*const connectString = `mongodb://${username}:${password}@${dbHost}:${dbPort}`;*/
-const connectString = `mongodb://${dbHost}:${dbPort}`;
+/*const connectString = `mongodb://${dbHost}:${dbPort}`;*/
 const mongoConnect: string = (process.env.MONGO_CONNECT || connectString)
 const mongo = new Mongo(mongoConnect, database);
-const kafka = KafkaClient.createClient(kafkaBroker, kafkaConsumerGroupId, kafkaClientId);
-let consumerID: number;
+const kafka = KafkaClient.createClient(kafkaBroker, kafkaClientId);
 
 const run = async (): Promise<any> => {
   const app = express();
@@ -55,11 +57,20 @@ const run = async (): Promise<any> => {
 
   annotationStore.applyMiddleware(app);
 
-  const test = new KafkaTest();
+  const documentMessageManager = new DocumentMessageManager({groupId: kafkaConsumerGroupId[0], topic: kafkaConsumerTopics[0], fromBeginning: false}, documentStore);
+  const annotationMessageManager = new AnnotationMessageManager({
+    groupId: kafkaConsumerGroupId[1],
+    topic: kafkaConsumerTopics[1],
+    fromBeginning: false
+  }, annotationStore);
   const server = await new Promise(resolve => {
     const s = app.listen({port}, () => {
       resolve(s);
     });
+  }).catch((error) => {
+    console.error(error);
+    documentMessageManager.shutdown();
+    annotationMessageManager.shutdown();
   });
 
   return {server, apollo};
@@ -69,5 +80,6 @@ run().then(({server, apollo}) => {
   console.log(`Server ready at http://localhost:${server.address().port}${apollo.graphqlPath}`);
 }).catch(error => {
   console.log(error);
+
   kafka.shutdown().then(() => console.log('Disconnected from Kafka!'));
 });
