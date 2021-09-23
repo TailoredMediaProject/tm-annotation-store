@@ -92,8 +92,7 @@ export class DocumentStore {
 
     private deleteTextDocument(res: any, id: string):void {
         try {
-            const _id = new ObjectId(id);
-            this.deleteDocument(_id,(err) => {
+            this.deleteDocument(id,(err) => {
                 if(err) {
                     DocumentStore.setError(res, 500, err.message);
                 } else {
@@ -105,8 +104,9 @@ export class DocumentStore {
         }
     }
 
-    deleteDocument(objectId: ObjectId, callback: MongoCallback<DeleteWriteOpResultObject>): void {
-        this.config.documentsCollection.deleteOne({objectId}, callback);
+    deleteDocument(objectId: string, callback: MongoCallback<DeleteWriteOpResultObject>): void {
+        const _id = new ObjectId(objectId);
+        this.config.documentsCollection.deleteOne({_id}, callback);
     }
 
     private static setError(res: any, status: number, msg: string) {

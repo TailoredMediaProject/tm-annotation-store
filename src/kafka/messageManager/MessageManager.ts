@@ -8,6 +8,7 @@ import {MessageHeader, MessageMethod} from "./MessageHeader";
 export abstract class MessageManager implements IConsumerObserver, IQueueProtocol<IReceivedKafkaMessage> {
     private readonly kafkaClient: KafkaClient;
     private readonly messageQueue: Queue<IReceivedKafkaMessage>;
+    private groupIds: string[] = [];
 
     protected constructor(config: IMessageManagerConfig | IMessageManagerConfig[]) {
         this.messageQueue = new Queue<IReceivedKafkaMessage>(this);
@@ -15,6 +16,7 @@ export abstract class MessageManager implements IConsumerObserver, IQueueProtoco
         if (!Array.isArray(config)) {
             config = [config];
         }
+        this.groupIds = config.map(consumer => consumer.groupId);
         this.setup(config);
     }
 
@@ -58,12 +60,12 @@ export abstract class MessageManager implements IConsumerObserver, IQueueProtoco
         return MessageMethod.NON;
     }
 
-    abstract create(topic: string, content: any): Promise<void>;
-    abstract update(topic: string, content: any): Promise<void>;
-    abstract delete(topic: string, content: any): Promise<void>;
+    abstract create(topic: string, content: any): Promise<any>;
+    abstract update(topic: string, content: any): Promise<any>;
+    abstract delete(topic: string, content: any): Promise<any>;
 
     async shutdown(): Promise<void> {
         this.messageQueue.shutdown();
-        this.kafkaClient.shutdown().then();
+        this.kafkaClient.shutdownConsumersWithGroupId(this.groupIds).then();
     }
 }

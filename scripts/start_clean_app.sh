@@ -2,7 +2,7 @@
 set -e
 
 echo 'shutdown existing environment'
-docker-compose down
+docker-compose --env-file ../.env.dev down
 
 echo 'remove docker data'
 rm -rf ../.docker/mongodb/data/*

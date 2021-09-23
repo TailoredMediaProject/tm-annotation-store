@@ -10,13 +10,13 @@ export class KafkaClient {
     private consumer: { [key: string]: KafkaConsumer } = {};
     private subscribedTopics: (string | RegExp)[] = [];
 
-    private constructor(brokers: string[], consumerGroupId: string[], clientId?: string) {
+    private constructor(brokers: string[], clientId?: string, consumerGroupId?: string[]) {
         this.kafka = new Kafka({clientId, brokers, logLevel: logLevel.INFO});
     }
 
-    public static createClient(brokers: string[], consumerGroupId: string[], clientId?: string): KafkaClient {
+    public static createClient(brokers: string[], clientId?: string, consumerGroupId?: string[]): KafkaClient {
         if (!this.client) {
-            this.client = new KafkaClient(brokers, consumerGroupId, clientId);
+            this.client = new KafkaClient(brokers, clientId, consumerGroupId);
         }
         return this.client;
     }
@@ -82,6 +82,26 @@ export class KafkaClient {
             return Promise.all(consumers.map(consumer => consumer.shutdown())).then(() => {
                 this.consumer = {};
             });
+        }
+    }
+
+    async shutdownProducerWithTopics(topics: string[]): Promise<void> {
+        for (const topic of topics) {
+            if (topic in this.producer) {
+                return this.producer[topic].disconnect().then(() => {
+                    delete this.producer[topic];
+                });
+            }
+        }
+    }
+
+    async shutdownConsumersWithGroupId(groupId: string[]): Promise<void> {
+        for (const groupIdKey in groupId) {
+            if (groupIdKey in this.consumer) {
+                this.consumer[groupIdKey].shutdown().then(() => {
+                    delete this.consumer[groupIdKey];
+                });
+            }
         }
     }
 
