@@ -17,8 +17,11 @@ const annotations = process.env.ANNOTATIONS_COLLECTION || 'annotations';
 const documents = process.env.DOCUMENTS_COLLECTION || 'documents';
 const port: number = +(process.env.SERVER_PORT || 4000);
 const baseURI = process.env.BASE_URI || `http://localhost:${port}`;
-const documentBasePath = `/api/docs/`;
-const annotationBasePath = `/api/annotations/`;
+// URL has to be updated everywhere
+/*const documentBasePath = `/api/docs/`;
+const annotationBasePath = `/api/annotations/`;*/
+const documentBasePath = `/resources/docs/`;
+const annotationBasePath = `/resources/annotations/`;
 
 const kafkaBroker = process.env.KAFKA_BROKER?.split(',') || ['localhost:9092'];
 const kafkaConsumerGroupId = process.env.KAFKA_CONSUMER_GROUP_ID?.split(',') || ['testDocumentStoreGroup', 'testAnnotationStoreGroup'];

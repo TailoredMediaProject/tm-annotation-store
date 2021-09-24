@@ -34,7 +34,7 @@ export abstract class MessageManager implements IConsumerObserver, IQueueProtoco
         this.messageQueue.push(message);
     }
 
-    queuePushesNext(element: IReceivedKafkaMessage): Promise<void> {
+    queuePushesNext(element: IReceivedKafkaMessage): Promise<any> {
         const method = MessageManager.getMethod(element);
         switch (method) {
             case MessageMethod.CREATE:

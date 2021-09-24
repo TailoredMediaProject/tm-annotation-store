@@ -1,9 +1,9 @@
 import {MessageManager} from "../messageManager/MessageManager";
-import {Annotation} from "../../annotations/model";
+import {Annotation, Filter} from "../../annotations/model";
 import {AnnotationStore} from "../../annotations/store";
 import {IMessageManagerConfig} from "../messageManager/IMessageManagerConfig";
 import bufferToJson from "../JSONConverter";
-import {AnnotationUpdateTrigger} from "./AnnotationUpdateTrigger";
+import {AnnotationMessageAcknowledgement} from "./AnnotationMessageAcknowledgement";
 
 enum AnnotationBody {
     RESOURCE='bodyResource',
@@ -18,9 +18,11 @@ enum AnnotationTarget {
 
 export class AnnotationMessageManager extends MessageManager {
     private readonly annotationStore: AnnotationStore;
+    private readonly annotationMessageAcknowledgement: AnnotationMessageAcknowledgement;
     constructor(messageManagerConfig: IMessageManagerConfig | IMessageManagerConfig[], annotationStore: AnnotationStore) {
         super(messageManagerConfig);
         this.annotationStore = annotationStore;
+        this.annotationMessageAcknowledgement = new AnnotationMessageAcknowledgement();
     }
     create(topic: string, content: any): Promise<any> {
         return new Promise(((resolve, reject) => {
@@ -30,10 +32,10 @@ export class AnnotationMessageManager extends MessageManager {
                     return reject('Annotation (Create): Content is not valid!');
                 }
                 const annotation = AnnotationMessageManager.createAnnotationFromJson(annotationContent);
-                this.annotationStore.pushAnnotation(annotation).then(createdAnnotation => {
-                    console.log(createdAnnotation);
-                    resolve(createdAnnotation.id);
-                });
+                return this.annotationStore.pushAnnotation(annotation).then(createdAnnotation => {
+                    return this.annotationMessageAcknowledgement.sendCreationAck(topic, createdAnnotation.id)
+                        .then(resolve);
+                }).catch(reject);
             } catch (error) {
                 console.log(error);
                 reject(error);
@@ -41,7 +43,7 @@ export class AnnotationMessageManager extends MessageManager {
         }));
     }
 
-    delete(topic: string, content: any): Promise<void> {
+    delete(topic: string, content: any): Promise<any> {
         return new Promise<void>((resolve, reject) => {
             try {
                 const annotationContent = bufferToJson(content);
@@ -50,10 +52,17 @@ export class AnnotationMessageManager extends MessageManager {
                 }
                 if ('id' in annotationContent) {
                     console.log('Deleting Annotation with ID: ', annotationContent.id);
-                    return this.annotationStore.deleteAnnotation(annotationContent.id).then(() => console.log('Deleted!'));
+                    return this.annotationStore.deleteAnnotation(annotationContent.id).then(() => {
+                        console.log('Deleted!');
+                        return this.annotationMessageAcknowledgement.sendDeletionAck(topic, annotationContent.id).then(resolve);
+                    }).catch(reject);
                 } else if ('filter' in annotationContent) {
-                    console.log('Deleting Annotations with targetID: ', annotationContent.filter.targetId);
-                    return this.annotationStore.deleteAnnotations(annotationContent.filter.targetId).then(() => console.log('Deleted'));
+                    const filter = new Filter(annotationContent.filter);
+                    console.log('Deleting Annotations with targetID: ', filter.targetId);
+                    return this.annotationStore.deleteAnnotations(filter).then(() => {
+                        console.log('Deleted!');
+                        return this.annotationMessageAcknowledgement.sendDeletionAck(topic, filter.targetId).then(resolve);
+                    }).catch(reject);
                 } else {
                     reject('No ID given to delete one or more annotations!');
                 }
@@ -64,7 +73,7 @@ export class AnnotationMessageManager extends MessageManager {
     }
 
     update(topic: string, content: any): Promise<void> {
-        return Promise.resolve(undefined);
+        return Promise.resolve().then(() => this.annotationMessageAcknowledgement.sendUpdateAck(topic, ''));
     }
 
     private static createAnnotationFromJson(content: any): Annotation {
@@ -96,6 +105,10 @@ export class AnnotationMessageManager extends MessageManager {
         } else {
             throw new Error('Target has to be set');
         }
+    }
+
+    async shutdown(): Promise<void> {
+        return this.annotationMessageAcknowledgement.shutdown().then(() => super.shutdown());
     }
 
 }

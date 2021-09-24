@@ -25,7 +25,6 @@ export class DocumentMessageManager extends MessageManager {
                         return reject(error);
                     }
                     console.log('Successfully added a text document!');
-                    console.log(doc);
                     resolve(doc.insertedId);
                 });
             } catch (error) {
@@ -35,8 +34,8 @@ export class DocumentMessageManager extends MessageManager {
         }));
     }
 
-    delete(topic: string, content: any): Promise<void> {
-        return new Promise(((resolve, reject) => {
+    delete(topic: string, content: any): Promise<any> {
+        return new Promise<any>(((resolve, reject) => {
             try {
                 const id = JSON.parse(content.toString()).id;
                 this.documentStore.deleteDocument(id, (error) => {
@@ -44,8 +43,7 @@ export class DocumentMessageManager extends MessageManager {
                         console.error('Error deleting document: ', error);
                         return reject(error);
                     } else {
-                        console.log('Deleted document!');
-                        resolve();
+                        return resolve(id);
                     }
                 })
             } catch (e) {
@@ -55,7 +53,7 @@ export class DocumentMessageManager extends MessageManager {
         }));
     }
 
-    update(topic: string, content: any): Promise<void> {
-        return Promise.resolve(undefined);
+    update(topic: string, content: any): Promise<any> {
+        return Promise.resolve();
     }
 }

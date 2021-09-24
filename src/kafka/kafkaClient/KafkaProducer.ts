@@ -2,6 +2,7 @@ import {CompressionTypes, Kafka, Message, Producer, ProducerConfig, RecordMetada
 
 export class KafkaProducer {
     private readonly producer: Producer;
+    private isConnected = false;
     private readonly topic: string;
 
     constructor(kafka: Kafka, topic: string, config?: ProducerConfig) {
@@ -15,15 +16,28 @@ export class KafkaProducer {
     }
 
     async sendMessages(messages: Message[], compression?: CompressionTypes): Promise<RecordMetadata[]> {
-        return this.producer.send({
-            topic: this.topic,
-            messages,
-            compression
-        });
+        return new Promise<RecordMetadata[]>((async (resolve, reject) => {
+            try {
+                if (!this.isConnected) {
+                    await this.producer.connect().then(() => this.isConnected = true);
+                }
+                return this.producer.send({
+                    topic: this.topic,
+                    messages,
+                    compression
+                })
+                    .then(resolve)
+                    .catch(reject);
+            } catch (error) {
+                reject(error);
+            }
+        }));
     }
 
     async disconnect(): Promise<void> {
-        return this.producer.disconnect();
+        return this.producer.disconnect().then(() => {
+            this.isConnected = false;
+        });
     }
 
 }

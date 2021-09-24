@@ -85,21 +85,21 @@ export class KafkaClient {
         }
     }
 
-    async shutdownProducerWithTopics(topics: string[]): Promise<void> {
-        for (const topic of topics) {
-            if (topic in this.producer) {
-                return this.producer[topic].disconnect().then(() => {
-                    delete this.producer[topic];
-                });
-            }
-        }
-    }
-
     async shutdownConsumersWithGroupId(groupId: string[]): Promise<void> {
         for (const groupIdKey in groupId) {
             if (groupIdKey in this.consumer) {
                 this.consumer[groupIdKey].shutdown().then(() => {
                     delete this.consumer[groupIdKey];
+                });
+            }
+        }
+    }
+
+    async shutdownProducerWithTopics(topics: string[]): Promise<void> {
+        for (const topic of topics) {
+            if (topic in this.producer) {
+                return this.producer[topic].disconnect().then(() => {
+                    delete this.producer[topic];
                 });
             }
         }

@@ -31,12 +31,15 @@ export class Queue<T> {
         if (this.observer && this.hasNext() && !this.isRunning) {
             this.isRunning = true;
             this.observer.queuePushesNext(this.queue[0])
-                .then(() => {
-                    console.log('Queue: Element processed!')
+                .then(resp => {
+                    console.log('Queue: Success...');
+                    console.log('Message processed!')
+                    console.log(resp);
                 })
                 .catch(error => {
-                    console.error('Queue: Element Not processed! Element: ', this.queue[0]);
-                    console.error('Queue error', error);
+                    console.error('Queue: Error...');
+                    console.error('Message Not processed! Message: ', this.queue[0]);
+                    console.error('Error: ', error);
                 })
                 .finally(() => {
                     console.log('Queue: Release...');
