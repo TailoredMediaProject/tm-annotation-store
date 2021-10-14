@@ -8,6 +8,7 @@ export class DocumentStore {
 
     constructor(private config: DocumentStoreConfig) {
         this.textDocumentBaseURI = `${ config.baseURI }${ config.documentBasePath }texts/`
+        console.info(`Initialized DocumentStore with baseURI <${this.textDocumentBaseURI}>`);
     }
 
     public applyMiddleware(app: express.Application):void {
