@@ -16,6 +16,7 @@ export class AnnotationStore extends DataSource {
         this.contextLinks = [
             'https://www.w3.org/ns/anno.jsonld'
         ]
+        console.info(`Initialized AnnotationStore with baseURI <${this.annotationBaseURI}>`);
     }
 
     public applyMiddleware(app: express.Application):void {

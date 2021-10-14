@@ -16,23 +16,18 @@ const database = process.env.MONGO_DATABASE || 'annotations';
 const annotations = process.env.ANNOTATIONS_COLLECTION || 'annotations';
 const documents = process.env.DOCUMENTS_COLLECTION || 'documents';
 const port: number = +(process.env.SERVER_PORT || 4000);
-const baseURI = process.env.BASE_URI || `http://localhost:${port}`;
-// URL has to be updated everywhere
-/*const documentBasePath = `/api/docs/`;
-const annotationBasePath = `/api/annotations/`;*/
+const baseURI: string = (process.env.BASE_URI || `http://localhost:${port}`).replace(/\/*$/, "");
 const documentBasePath = `/resources/docs/`;
 const annotationBasePath = `/resources/annotations/`;
+
+const mongoConnect: string = (process.env.MONGO_CONNECT || `mongodb://${username}:${password}@${dbHost}:${dbPort}`)
+const mongo = new Mongo(mongoConnect, database);
 
 const kafkaBroker = process.env.KAFKA_BROKER?.split(',') || ['localhost:9092'];
 const kafkaConsumerGroupId = process.env.KAFKA_CONSUMER_GROUP_ID?.split(',') || ['testDocumentStoreGroup', 'testAnnotationStoreGroup'];
 const kafkaConsumerTopics = ['testDocumentTopic', 'testAnnotationTopic'];
 const kafkaClientId = process.env.KAFKA_CLIENT_ID || 'tm-annotation_store';
 
-const connectString = `mongodb://root:root@${dbHost}:${dbPort}`;
-/*const connectString = `mongodb://${username}:${password}@${dbHost}:${dbPort}`;*/
-/*const connectString = `mongodb://${dbHost}:${dbPort}`;*/
-const mongoConnect: string = (process.env.MONGO_CONNECT || connectString)
-const mongo = new Mongo(mongoConnect, database);
 const kafka = KafkaClient.createClient(kafkaBroker, kafkaClientId);
 
 const run = async (): Promise<any> => {
