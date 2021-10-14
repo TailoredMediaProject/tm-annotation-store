@@ -13,7 +13,7 @@ const database = process.env.MONGO_DATABASE || 'annotations';
 const annotations = process.env.ANNOTATIONS_COLLECTION || 'annotations';
 const documents = process.env.DOCUMENTS_COLLECTION || 'documents';
 const port: number = +(process.env.SERVER_PORT || 4000);
-const baseURI = process.env.BASE_URI || `http://localhost:${port}`;
+const baseURI: string = (process.env.BASE_URI || `http://localhost:${port}`).replace(/\/*$/, "");
 const documentBasePath = `/resources/docs/`;
 const annotationBasePath = `/resources/annotations/`;
 
