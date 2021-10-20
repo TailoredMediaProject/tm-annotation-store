@@ -25,7 +25,7 @@ const mongo = new Mongo(mongoConnect, database);
 
 const kafkaBroker = process.env.KAFKA_BROKER?.split(',') || ['localhost:9092'];
 const kafkaConsumerGroupId = process.env.KAFKA_CONSUMER_GROUP_ID?.split(',') || ['testDocumentStoreGroup', 'testAnnotationStoreGroup'];
-const kafkaConsumerTopics = ['testDocumentTopic', 'testAnnotationTopic'];
+const kafkaConsumerTopics = process.env.KAFKA_CONSUMER_TOPICS?.split(',') || ['testDocumentTopic', 'testAnnotationTopic'];
 const kafkaClientId = process.env.KAFKA_CLIENT_ID || 'tm-annotation_store';
 
 const kafka = KafkaClient.createClient(kafkaBroker, kafkaClientId);
