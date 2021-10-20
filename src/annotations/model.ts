@@ -99,6 +99,7 @@ export class Annotation {
 
     getValue(annotationBaseURI: string = ''): any {
         this.value.id = `${annotationBaseURI}${this.getIdString()}`;
+        this.value.target.source = `${annotationBaseURI}${this.value.target.source}`
         return this.value;
     }
 }

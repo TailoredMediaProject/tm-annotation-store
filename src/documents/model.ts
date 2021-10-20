@@ -19,7 +19,7 @@ export class TextDocument {
     }
 
     static fromStorage(body:any, baseURI: string):TextDocument {
-        return new TextDocument(body.title, body.content, body._id);
+        return new TextDocument(body.title, body.content, baseURI + body._id);
     }
 }
 

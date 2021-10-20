@@ -11,7 +11,7 @@ export class KafkaClient {
     private subscribedTopics: (string | RegExp)[] = [];
 
     private constructor(brokers: string[], clientId?: string, consumerGroupId?: string[]) {
-        this.kafka = new Kafka({clientId, brokers, logLevel: logLevel.INFO});
+        this.kafka = new Kafka({clientId, brokers, logLevel: logLevel.ERROR});
     }
 
     public static createClient(brokers: string[], clientId?: string, consumerGroupId?: string[]): KafkaClient {
