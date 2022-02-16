@@ -2,6 +2,8 @@ import { IResolvers } from "apollo-server";
 import {AnnotationStore} from '../annotations/store';
 import {Annotation, Filter} from '../annotations/model';
 import {GraphQLScalarType} from 'graphql';
+import {createAnnotationBody} from "../annotations/annotation.service";
+import {ObjectId} from "mongodb";
 
 const resolvers: IResolvers = {
     Void: new GraphQLScalarType({
@@ -47,7 +49,7 @@ const resolvers: IResolvers = {
     Query: {
         annotations: (parent, args, context) => {
             const filter = args.filter ? new Filter(args.filter) : undefined;
-            return (context.dataSources.annotations as AnnotationStore).listAnnotations(filter);
+            return (context.dataSources.annotations as AnnotationStore).listAnnotations(filter?.toMongoFilter());
         },
         annotation: (parent, args, context) => {
             return (context.dataSources.annotations as AnnotationStore).getAnnotationFromUrl(args.id);
@@ -58,7 +60,7 @@ const resolvers: IResolvers = {
             return (context.dataSources.annotations as AnnotationStore).deleteAnnotation(id);
         },
         deleteAnnotations: (parent, args, context) => {
-            return (context.dataSources.annotations as AnnotationStore).deleteAnnotations(new Filter(args.filter));
+            return (context.dataSources.annotations as AnnotationStore).deleteAnnotations(new Filter(args.filter).toMongoFilter());
         },
         addAnnotation: (parent, {
             bodyResource, bodyText, targetResource, targetTextSelector, targetFragmentSelector

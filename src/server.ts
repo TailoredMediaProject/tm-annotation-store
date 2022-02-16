@@ -2,11 +2,9 @@ import schema from './graphql/schema';
 import express from 'express';
 import {ApolloServer} from 'apollo-server-express';
 import {Mongo} from './mongo';
-import {AnnotationStore} from './annotations/store';
 import {DocumentStore} from './documents/store';
 import {KafkaClient} from "./kafka/kafkaClient/KafkaClient";
-import {DocumentMessageManager} from "./kafka/documents/DocumentMessageManager";
-import {AnnotationMessageManager} from "./kafka/annotations/AnnotationMessageManager";
+import {AnnotationStore} from "./annotations/annotation.store";
 
 const username = process.env.MONGO_USERNAME || 'apollo';
 const password = process.env.MONGO_PASSWORD || 'apollo';
@@ -20,7 +18,7 @@ const baseURI: string = (process.env.BASE_URI || `http://localhost:${port}`).rep
 const documentBasePath = `/resources/docs/`;
 const annotationBasePath = `/resources/annotations/`;
 
-const mongoConnect: string = (process.env.MONGO_CONNECT || `mongodb://${username}:${password}@${dbHost}:${dbPort}`)
+const mongoConnect: string = (process.env.MONGO_CONNECT || `mongodb://${dbHost}:${dbPort}`)
 const mongo = new Mongo(mongoConnect, database);
 
 const kafkaBroker = process.env.KAFKA_BROKER?.split(',') || ['localhost:9092'];
@@ -55,20 +53,20 @@ const run = async (): Promise<any> => {
 
   annotationStore.applyMiddleware(app);
 
-  const documentMessageManager = new DocumentMessageManager({groupId: kafkaConsumerGroupId[0], topic: kafkaConsumerTopics[0], fromBeginning: false}, documentStore);
-  const annotationMessageManager = new AnnotationMessageManager({
-    groupId: kafkaConsumerGroupId[1],
-    topic: kafkaConsumerTopics[1],
-    fromBeginning: false
-  }, annotationStore);
+  // const documentMessageManager = new DocumentMessageManager({groupId: kafkaConsumerGroupId[0], topic: kafkaConsumerTopics[0], fromBeginning: false}, documentStore);
+  // const annotationMessageManager = new AnnotationMessageManager({
+  //   groupId: kafkaConsumerGroupId[1],
+  //   topic: kafkaConsumerTopics[1],
+  //   fromBeginning: false
+  // }, annotationStore);
   const server = await new Promise(resolve => {
     const s = app.listen({port}, () => {
       resolve(s);
     });
   }).catch((error) => {
     console.error(error);
-    documentMessageManager.shutdown();
-    annotationMessageManager.shutdown();
+    // documentMessageManager.shutdown();
+    // annotationMessageManager.shutdown();
   });
 
   return {server, apollo};

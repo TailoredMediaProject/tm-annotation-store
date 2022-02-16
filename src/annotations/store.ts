@@ -1,26 +1,14 @@
-import {DataSource} from 'apollo-datasource';
 import {ObjectId} from 'mongodb';
-import {Annotation, Filter} from './model';
-import {AnnotationStoreConfig} from './config';
-import { ValidationError } from 'apollo-server';
+import {Annotation} from './model';
 import express from 'express';
+import {AnnotationMethods} from "./AnnotationMethods";
+import {AnnotationStoreConfig} from "./config";
 
-export class AnnotationStore extends DataSource {
-
-    private readonly annotationBaseURI: string;
-    private readonly contextLinks: any[];
-
+export class AnnotationStore extends AnnotationMethods {
     constructor(private config: AnnotationStoreConfig) {
-        super();
-        this.annotationBaseURI = `${ config.baseURI }${ config.annotationBasePath }`;
-        this.contextLinks = [
-            'https://www.w3.org/ns/anno.jsonld'
-        ]
-        console.info(`Initialized AnnotationStore with baseURI <${this.annotationBaseURI}>`);
+        super(config);
     }
-
-    public applyMiddleware(app: express.Application):void {
-        const router = express.Router();
+    protected addRoutes(router: express.Router): express.Router {
         router.route('/:id')
             .get((req, res) => {
                 this.getAnnotationFromId(req.params.id).then((annotation:any) => {
@@ -28,8 +16,8 @@ export class AnnotationStore extends DataSource {
                 },() => {
                     res.status(404).end();
                 })
-            })
-        app.use(this.config.annotationBasePath, router);
+            });
+        return router;
     }
 
     private addContextLink(annotation: any): any {
@@ -37,92 +25,25 @@ export class AnnotationStore extends DataSource {
         return annotation;
     }
 
-    pushAnnotation(annotation: Annotation): Promise<any> {
-        return new Promise((resolve, reject) => {
-            this.config.annotationsCollection.insertOne(annotation.setHashSum(), {}, (err, doc) => {
-                if(err) {
-                    reject(err);
-                } else {
-                    resolve(Annotation.fromJson(doc.ops[0]).getValue(this.annotationBaseURI));
-                }
-            })
-        })
+    override pushAnnotation(annotation: Annotation): Promise<any> {
+        return super.pushAnnotation(annotation.setHashSum()).then(this.getAnnotationFromDoc);
     }
 
-    public getAnnotationFromId(id: string): Promise<any> {
-        return this.getAnnotation(new ObjectId(id), true);
+    override pushAnnotations(annotations: Annotation[]): Promise<any> {
+        return super.pushAnnotations(annotations
+            .map(annotation => annotation.setHashSum()))
+            .then(annotations => annotations.map(this.getAnnotationFromDoc))
     }
 
-    public getAnnotationFromUrl(url: string): Promise<any> {
-        return this.getAnnotation(this.objectIdFromUrl(url));
+    override getAnnotation(_id: ObjectId, prefixed: boolean = false): Promise<any> {
+        return super.getAnnotation(_id, prefixed).then(this.getAnnotationFromDoc);
     }
 
-    private getAnnotation(_id: ObjectId, prefixed = false): Promise<any> {
-        return new Promise((resolve,reject) => {
-            this.config.annotationsCollection.find({_id}).toArray((err, docs) => {
-                if(err || !docs || docs.length === 0) {
-                    reject(err);
-                } else {
-                    resolve(Annotation.fromJson(docs[0]).getValue(this.annotationBaseURI));
-                }
-            });
-        });
+    override listAnnotations(filter?: Document[]): Promise<any> {
+        return super.listAnnotations(filter).then(docs => docs.map(this.getAnnotationFromDoc));
     }
 
-    listAnnotations(filter?: Filter): Promise<any> {
-        return new Promise((resolve,reject) => {
-            this.config.annotationsCollection.find(filter ? filter.toMongoFilter() : {}).toArray((err, docs) => {
-                if(err) {
-                    reject(err);
-                } else {
-                    resolve(docs.map(d => Annotation.fromJson(d).getValue(this.annotationBaseURI)));
-                }
-            });
-        });
-    }
-
-    deleteAnnotation(url: string): Promise<void> {
-        const _id = this.objectIdFromUrl(url);
-        return new Promise((resolve,reject) => {
-            this.config.annotationsCollection.deleteOne({_id},(err) => {
-                if(err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
-
-    deleteAnnotations(filter: Filter): Promise<void> {
-        return new Promise((resolve,reject) => {
-            this.config.annotationsCollection.deleteMany(filter.toMongoFilter(),(err) => {
-                if(err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
-
-    private objectIdFromUrl(url: string): ObjectId {
-        if(url.startsWith(this.annotationBaseURI)) {
-            try {
-                return new ObjectId(url.substr(url.lastIndexOf('/')+1));
-            } catch (err) {
-                console.error(err);
-                throw new ValidationError('annotation url is not correct, trailing id not valid')
-            }
-        } else if(url.startsWith('anno')) {
-            try {
-                return new ObjectId(url.substr(url.lastIndexOf(':')+1));
-            } catch (err) {
-                console.error(err);
-                throw new ValidationError('annotation id is not correct, trailing id not valid')
-            }
-        } else {
-            throw new ValidationError('annotation url is not correct')
-        }
+    private getAnnotationFromDoc(documents: any): Annotation {
+        return Annotation.fromJson(documents).getValue(this.annotationBaseURI);
     }
 }

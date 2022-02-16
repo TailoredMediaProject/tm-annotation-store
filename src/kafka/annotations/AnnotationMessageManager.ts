@@ -59,7 +59,7 @@ export class AnnotationMessageManager extends MessageManager {
                 } else if ('filter' in annotationContent) {
                     const filter = new Filter(annotationContent.filter);
                     console.log('Deleting Annotations with targetID: ', filter.targetId);
-                    return this.annotationStore.deleteAnnotations(filter).then(() => {
+                    return this.annotationStore.deleteAnnotations(filter.toMongoFilter()).then(() => {
                         console.log('Deleted!');
                         return this.annotationMessageAcknowledgement.sendDeletionAck(topic, filter.targetId).then(resolve);
                     }).catch(reject);

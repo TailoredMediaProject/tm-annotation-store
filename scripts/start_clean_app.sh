@@ -9,7 +9,9 @@ rm -rf ../.docker/mongodb/data/*
 mkdir -p ../.docker/mongodb/data ../.docker/mongodb/data/db ../.docker/mongodb/data/log
 
 echo 'run environment'
-docker-compose --env-file .env.dev up -d
+#docker-compose --env-file .env.dev up -d
+docker-compose --env-file ../.env.dev up -d #TODO: Delete before commit
+
 
 sleep 10
 
