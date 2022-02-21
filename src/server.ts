@@ -30,7 +30,7 @@ const kafka = KafkaClient.createClient(kafkaBroker, kafkaClientId);
 
 const run = async (): Promise<any> => {
   const app = express();
-  app.use(express.json());
+  app.use(express.json({limit: '10mb'}));
 
   app.get('/', (req, res) => res.send('Server is up and running!'));
 

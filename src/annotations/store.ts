@@ -2,12 +2,8 @@ import {ObjectId} from 'mongodb';
 import {Annotation} from './model';
 import express from 'express';
 import {AnnotationMethods} from "./AnnotationMethods";
-import {AnnotationStoreConfig} from "./config";
 
 export class AnnotationStore extends AnnotationMethods {
-    constructor(private config: AnnotationStoreConfig) {
-        super(config);
-    }
     protected addRoutes(router: express.Router): express.Router {
         router.route('/:id')
             .get((req, res) => {

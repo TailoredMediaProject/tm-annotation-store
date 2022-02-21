@@ -3,11 +3,9 @@ import {DataSource} from "apollo-datasource";
 import express from "express";
 import {ObjectId} from "mongodb";
 import {ValidationError} from "apollo-server";
-import {Annotation} from "./annotation.model";
-import {AnnotationDto} from "./annotation-dto.model";
 
 export abstract class AnnotationMethods extends DataSource {
-    readonly annotationBaseURI: string;
+    protected readonly annotationBaseURI: string;
     readonly contextLinks: any[];
 
     constructor(protected config: AnnotationStoreConfig) {
@@ -33,19 +31,31 @@ export abstract class AnnotationMethods extends DataSource {
 
     public pushAnnotation(annotation: any): Promise<any> {
         return this.config.annotationsCollection
-            .insertOne(annotation)
+            .insertOne({
+                _id: null,
+                created: new Date(),
+                ...annotation
+            })
             .then(document => this.getAnnotationFromId(document.ops[0]._id));
     }
 
     public pushAnnotations(annotations: any): Promise<any> {
         return this.config.annotationsCollection
-            .insertMany(annotations)
+            .insertMany(annotations.map((annotation: any) => ({
+                _id: null,
+                created: new Date(),
+                ...annotation
+            })))
             // @ts-ignore
-            .then(documents => this.listAnnotations({'_id': {'$in': documents.ops}}));
+            .then(documents => documents.ops);
     }
 
     public getAnnotationFromId(id: string | ObjectId): Promise<any> {
-        return this.getAnnotation(new ObjectId(id), true);
+        try {
+            return this.getAnnotation(new ObjectId(id), true);
+        } catch (error){
+            return Promise.reject('Object ID not valid!');
+        }
     }
 
     public getAnnotationFromUrl(url: string): Promise<any> {
@@ -99,5 +109,4 @@ export abstract class AnnotationMethods extends DataSource {
         }
     }
 
-    protected abstract exportDboToDto(annotation: any): any;
 }
