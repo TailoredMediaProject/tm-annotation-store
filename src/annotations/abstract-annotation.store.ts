@@ -4,7 +4,7 @@ import express from "express";
 import {ObjectId} from "mongodb";
 import {ValidationError} from "apollo-server";
 
-export abstract class AnnotationMethods extends DataSource {
+export abstract class AbstractAnnotationStore extends DataSource {
     protected readonly annotationBaseURI: string;
     readonly contextLinks: any[];
 
@@ -29,14 +29,14 @@ export abstract class AnnotationMethods extends DataSource {
 
     protected abstract addRoutes(router: express.Router): express.Router;
 
-    public pushAnnotation(annotation: any): Promise<any> {
+    public pushAnnotation(annotation: any): Promise<ObjectId> {
         return this.config.annotationsCollection
             .insertOne({
                 _id: null,
                 created: new Date(),
                 ...annotation
             })
-            .then(document => this.getAnnotationFromId(document.ops[0]._id));
+            .then(document => document.insertedId);
     }
 
     public pushAnnotations(annotations: any): Promise<any> {
@@ -46,7 +46,6 @@ export abstract class AnnotationMethods extends DataSource {
                 created: new Date(),
                 ...annotation
             })))
-            // @ts-ignore
             .then(documents => documents.ops);
     }
 
@@ -87,6 +86,17 @@ export abstract class AnnotationMethods extends DataSource {
 
     public deleteAnnotations(filter: Document[]): Promise<void> {
         return this.config.annotationsCollection.deleteMany(filter).then();
+    }
+
+    protected idExists(id: string | ObjectId): Promise<boolean> {
+        try {
+            const oId = new ObjectId(id);
+            return this.config.annotationsCollection
+                .countDocuments({'_id': oId}, {limit: 1})
+                .then(count => count > 0);
+        } catch (e) {
+            return Promise.resolve(false);
+        }
     }
 
     private objectIdFromUrl(url: string): ObjectId {

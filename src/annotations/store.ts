@@ -1,9 +1,9 @@
 import {ObjectId} from 'mongodb';
 import {Annotation} from './model';
 import express from 'express';
-import {AnnotationMethods} from "./AnnotationMethods";
+import {AbstractAnnotationStore} from "./abstract-annotation.store";
 
-export class AnnotationStore extends AnnotationMethods {
+export class AnnotationStore extends AbstractAnnotationStore {
     protected addRoutes(router: express.Router): express.Router {
         router.route('/:id')
             .get((req, res) => {
@@ -22,13 +22,12 @@ export class AnnotationStore extends AnnotationMethods {
     }
 
     override pushAnnotation(annotation: Annotation): Promise<any> {
-        return super.pushAnnotation(annotation.setHashSum()).then(this.getAnnotationFromDoc);
+        return super.pushAnnotation(annotation.setHashSum());
     }
 
     override pushAnnotations(annotations: Annotation[]): Promise<any> {
         return super.pushAnnotations(annotations
             .map(annotation => annotation.setHashSum()))
-            .then(annotations => annotations.map(this.getAnnotationFromDoc))
     }
 
     override getAnnotation(_id: ObjectId, prefixed: boolean = false): Promise<any> {

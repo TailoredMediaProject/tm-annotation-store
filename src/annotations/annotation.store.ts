@@ -1,10 +1,10 @@
-import {AnnotationMethods} from "./AnnotationMethods";
+import {AbstractAnnotationStore} from "./abstract-annotation.store";
 import {Annotation} from "./annotation.model";
 import express from "express";
 import {AnnotationDto, exportAnnotation, importAnnotation} from "./annotation-dto.model";
 import {ObjectId} from "mongodb";
 
-export class AnnotationStore extends AnnotationMethods {
+export class AnnotationStore extends AbstractAnnotationStore {
 
     protected addRoutes(router: express.Router): express.Router {
         router.route('/')
@@ -16,9 +16,7 @@ export class AnnotationStore extends AnnotationMethods {
                 } else {
                     next('Request body undefined!')
                 }
-            });
-        router.route('/')
-            .get((req, res, next) => {
+            }).get((req, res, next) => {
                 this.listAnnotations()
                     .then(annotations => {
                         res.json(annotations);
@@ -38,22 +36,24 @@ export class AnnotationStore extends AnnotationMethods {
                     console.error(error);
                     next('ID string invalid!');
                 }
-            });
+            })
         return router;
     }
 
-    private push(annotations: Annotation | Annotation[]): Promise<any> {
+    private push(annotations: AnnotationDto | AnnotationDto[]): Promise<any> {
         if (Array.isArray(annotations)) {
-            return this.pushAnnotations(annotations.map(importAnnotation));
+            return this.pushAnnotations(annotations.map(importAnnotation))
+                .then(insertedAnnotations => this.mapOldIdToNewId(annotations, insertedAnnotations, this.annotationBaseURI));
         }
-        return this.pushAnnotation(importAnnotation(annotations));
+        return this.pushAnnotation(importAnnotation(annotations))
+            .then(objectId => ({id: objectId.toHexString()}));
     }
 
-    override async pushAnnotation(annotation: Annotation): Promise<any> {
+    override async pushAnnotation(annotation: Annotation): Promise<ObjectId> {
         return super.pushAnnotation(annotation)
     }
 
-    override pushAnnotations(annotations: Annotation[]): Promise<any> {
+    override pushAnnotations(annotations: Annotation[]): Promise<Annotation[]> {
         return super.pushAnnotations(annotations);
     }
 
@@ -70,5 +70,19 @@ export class AnnotationStore extends AnnotationMethods {
 
     protected exportDboToDto(annotation: Annotation): AnnotationDto {
         return exportAnnotation(annotation, this.annotationBaseURI);
+    }
+
+    private mapOldIdToNewId(annotations: AnnotationDto[], storedAnnotations: Annotation[], asURL: string = ''): {[key: string]: string} {
+        const idDict: {[key: string]: string} = {};
+        annotations.forEach(annotation => {
+            const found = storedAnnotations.find(item =>
+                item.origin === annotation.origin
+                && item.body === annotation.body
+                && item.target === annotation.target)
+            if (found) {
+                idDict[annotation.id] = asURL + found._id.toHexString();
+            }
+        });
+        return idDict;
     }
 }

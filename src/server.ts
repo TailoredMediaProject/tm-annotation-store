@@ -5,6 +5,7 @@ import {Mongo} from './mongo';
 import {DocumentStore} from './documents/store';
 import {KafkaClient} from "./kafka/kafkaClient/KafkaClient";
 import {AnnotationStore} from "./annotations/annotation.store";
+import morgan from "morgan";
 
 const username = process.env.MONGO_USERNAME || 'apollo';
 const password = process.env.MONGO_PASSWORD || 'apollo';
@@ -31,6 +32,7 @@ const kafka = KafkaClient.createClient(kafkaBroker, kafkaClientId);
 const run = async (): Promise<any> => {
   const app = express();
   app.use(express.json({limit: '10mb'}));
+  app.use(morgan('dev'));
 
   app.get('/', (req, res) => res.send('Server is up and running!'));
 

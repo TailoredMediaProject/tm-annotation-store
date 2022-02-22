@@ -34,14 +34,6 @@ const annotationDto2Dbo = (dto: AnnotationDto): Annotation => ({
 export const exportAnnotation = (annotation: Annotation, annotationBaseURI: string = ''): AnnotationDto => {
     const dto = annotationDbo2Dto(annotation);
     dto.id = annotationBaseURI + dto.id;
-    if (Array.isArray(dto.target)) {
-        dto.target = dto.target.map(target => ({
-            ...target,
-            source: annotationBaseURI + target.source
-        }));
-    } else {
-        (dto.target as Target).source = annotationBaseURI + (dto.target.source);
-    }
     return dto;
 }
 
