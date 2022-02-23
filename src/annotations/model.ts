@@ -16,13 +16,14 @@ export class Annotation {
             type: 'Annotation'
         }
         o._metadata = {
-            created: Date.now()
+            created: Date.now(),
+            hashSum: null,
         }
         return o;
     }
 
     public static fromJson(json: any) {
-        return Object.assign(new Annotation(), json);
+        return Object.assign(Annotation.create(), json);
     }
 
     setBody(body: any, type: string) {
@@ -94,11 +95,12 @@ export class Annotation {
     }
 
     getIdString(): string {
-        return this._id?.toString();
+        return this._id?.toHexString();
     }
 
     getValue(annotationBaseURI: string = ''): any {
-        this.value.id = `${annotationBaseURI}${this.getIdString()}`;
+        this.value.id = annotationBaseURI + this.getIdString();
+        this.value.target.source = annotationBaseURI + this.value.target.source
         return this.value;
     }
 }
@@ -110,7 +112,8 @@ export class Filter {
         this.targetId = json.targetId;
     }
 
-    toMongoFilter() {
-        return {$or:[{'value.target.id':{$eq:this.targetId}},{'value.target.source':{$eq:this.targetId}}]};
+    toMongoFilter(): Document[] {
+        // @ts-ignore
+        return [{$or:[{'value.target.id':{$eq:this.targetId}},{'value.target.source':{$eq:this.targetId}}]}];
     }
 }

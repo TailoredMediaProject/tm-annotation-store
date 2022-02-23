@@ -2,13 +2,15 @@
 set -e
 
 echo 'shutdown existing environment'
-docker-compose down
+docker-compose --env-file ../.env.dev down
 
 echo 'remove docker data'
-rm -rf .docker/mongodb/data
+rm -rf ../.docker/mongodb/data/*
+mkdir -p ../.docker/mongodb/data ../.docker/mongodb/data/db ../.docker/mongodb/data/log
 
 echo 'run environment'
 docker-compose --env-file .env.dev up -d
+
 
 sleep 10
 
@@ -18,8 +20,7 @@ function init_kafka() {
   npm i
   node init_kafka.js
 }
-
-(cd ./scripts/node && init_kafka)
+(cd ./node && init_kafka)
 
 echo 'install dependencies'
 npm i

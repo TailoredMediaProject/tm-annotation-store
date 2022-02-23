@@ -122,13 +122,13 @@ mutation {
 ## Document Store
 API is defined in [.api/doc-store-spec.yaml]
 
-* List Text Document: `curl GET http://localhost:4000/api/docs/texts/`
-* Get Text Document: `curl GET http://localhost:4000/api/docs/texts/123abc`
+* List Text Document: `curl GET http://localhost:4000/resources/docs/texts/`
+* Get Text Document: `curl GET http://localhost:4000/resources/docs/texts/123abc`
 * Create Text Documents: ```curl POST \
-  --url http://localhost:4000/api/docs/texts/ \
+  --url http://localhost:4000/resources/docs/texts/ \
   --header 'Content-Type: application/json' \
   --data '{
   "title": "Some Title",
   "content": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed.."
   }'```
-* Delete Text Document: `curl DELETE http://localhost:4000/api/docs/texts/123abc`
+* Delete Text Document: `curl DELETE http://localhost:4000/resources/docs/texts/123abc`

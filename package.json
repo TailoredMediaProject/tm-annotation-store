@@ -17,11 +17,18 @@
     "@redlink/tm-annotation-store-api": "^2.0.8",
     "@types/hash-sum": "^1.0.0",
     "@types/mongodb": "^3.6.12",
+    "@types/morgan": "^1.9.3",
     "apollo-datasource": "^0.8.0",
     "apollo-server": "^2.23.0",
+    "crypto": "^1.0.1",
     "graphql": "^15.5.0",
     "hash-sum": "^2.0.0",
-    "mongodb": "^3.6.6"
+    "kafkajs": "^1.15.0",
+    "mongodb": "^3.6.6",
+    "morgan": "^1.10.0",
+    "nodemon": "^2.0.15",
+    "rx-store": "^1.0.0",
+    "rxjs": "^7.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.13.15",

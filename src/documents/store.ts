@@ -1,4 +1,10 @@
-import {ObjectId} from 'mongodb';
+import {
+    CollectionInsertOneOptions,
+    DeleteWriteOpResultObject,
+    InsertOneWriteOpResult,
+    MongoCallback,
+    ObjectId
+} from 'mongodb';
 import {AnnotationCount, TextDocument} from './model';
 import express from 'express';
 import {DocumentStoreConfig} from './config';
@@ -31,6 +37,8 @@ export class DocumentStore {
         app.use(this.config.documentBasePath, router);
     }
 
+
+
     private listTextDocuments(res: any): void {
         this.config.documentsCollection.find().toArray((err, docs) => {
             if(err) {
@@ -45,7 +53,7 @@ export class DocumentStore {
     private createTextDocument(req: any, res: any): void {
         try {
             const document = TextDocument.fromRequest(req.body);
-            this.config.documentsCollection.insertOne({title:document.title, content:document.content}, {}, (err, doc) => {
+            this.createDocument({title:document.title, content:document.content}, {}, (err, doc) => {
                 if(err) {
                     DocumentStore.setError(res, 500, err.message);
                 } else {
@@ -55,8 +63,12 @@ export class DocumentStore {
             })
         } catch (err) {
             // @ts-ignore
-            DocumentStore.setError(res, 400, err?.message);
+            DocumentStore.setError(res, 400, err.message);
         }
+    }
+
+    createDocument(content: any, options: CollectionInsertOneOptions, callback: MongoCallback<InsertOneWriteOpResult<any>>): void {
+        this.config.documentsCollection.insertOne({title: content.title, content: content.content}, options, callback);
     }
 
     private getTextDocument(res: any, id: string) {
@@ -81,8 +93,7 @@ export class DocumentStore {
 
     private deleteTextDocument(res: any, id: string):void {
         try {
-            const _id = new ObjectId(id);
-            this.config.documentsCollection.deleteOne({_id},(err) => {
+            this.deleteDocument(id,(err) => {
                 if(err) {
                     DocumentStore.setError(res, 500, err.message);
                 } else {
@@ -92,6 +103,11 @@ export class DocumentStore {
         } catch (err) {
             DocumentStore.setError(res, 400, 'Not a valid id');
         }
+    }
+
+    deleteDocument(objectId: string, callback: MongoCallback<DeleteWriteOpResultObject>): void {
+        const _id = new ObjectId(objectId);
+        this.config.documentsCollection.deleteOne({_id}, callback);
     }
 
     private static setError(res: any, status: number, msg: string) {
