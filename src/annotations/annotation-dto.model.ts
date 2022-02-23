@@ -7,7 +7,7 @@ export interface AnnotationDto {
     replaces?: string,
     replacedBy?: string,
     readonly created: Date,
-    body: Body | Body[]
+    body: Body
     target: Target | Target[]
 }
 

@@ -45,6 +45,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
             return this.pushAnnotations(annotations.map(importAnnotation))
                 .then(insertedAnnotations => this.mapOldIdToNewId(annotations, insertedAnnotations, this.annotationBaseURI));
         }
+        // return this.insertOneIfNotExisting(importAnnotation(annotations));
         return this.pushAnnotation(importAnnotation(annotations))
             .then(objectId => ({id: objectId.toHexString()}));
     }

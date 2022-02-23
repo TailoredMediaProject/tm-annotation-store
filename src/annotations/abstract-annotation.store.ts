@@ -49,6 +49,23 @@ export abstract class AbstractAnnotationStore extends DataSource {
             .then(documents => documents.ops);
     }
 
+    protected insertOneIfNotExisting(annotation: any): Promise<any> {
+        return this.config.annotationsCollection
+            .updateOne({
+                origin: annotation.origin,
+                body: annotation.body,
+                target: annotation.target
+            }, {
+                $setOnInsert: {
+                    _id: null,
+                    created: new Date(),
+                    ...annotation
+                }
+            }, {
+                upsert: true
+            }).then(document => document.result);
+    }
+
     public getAnnotationFromId(id: string | ObjectId): Promise<any> {
         try {
             return this.getAnnotation(new ObjectId(id), true);

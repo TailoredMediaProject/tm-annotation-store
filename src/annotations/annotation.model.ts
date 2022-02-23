@@ -6,7 +6,7 @@ export interface Annotation {
     replaces?: string,
     replacedBy?: string,
     created: Date,
-    body: Body | Body[],
+    body: Body,
     target: Target | Target[]
 }
 
