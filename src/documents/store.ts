@@ -54,7 +54,8 @@ export class DocumentStore {
                 }
             })
         } catch (err) {
-            DocumentStore.setError(res, 400, err.message);
+            // @ts-ignore
+            DocumentStore.setError(res, 400, err?.message);
         }
     }
 

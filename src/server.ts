@@ -1,5 +1,6 @@
 import schema from './graphql/schema';
 import express from 'express';
+import path = require('path');
 import {ApolloServer} from 'apollo-server-express';
 import {Mongo} from './mongo';
 import {AnnotationStore} from './annotations/store';
@@ -14,6 +15,7 @@ const annotations = process.env.ANNOTATIONS_COLLECTION || 'annotations';
 const documents = process.env.DOCUMENTS_COLLECTION || 'documents';
 const port: number = +(process.env.SERVER_PORT || 4000);
 const baseURI: string = (process.env.BASE_URI || `http://localhost:${port}`).replace(/\/*$/, "");
+const staticDir = process.env.BE_STATIC || 'static';
 const documentBasePath = `/resources/docs/`;
 const annotationBasePath = `/resources/annotations/`;
 
@@ -51,9 +53,11 @@ const run = async (): Promise<any> => {
     });
   });
 
+
+  app.use('/api/v1/spec.yaml', express.static(path.join(__dirname, `${staticDir}/spec.yaml`)));
+  console.log('Serving "spec.yaml" on /api/v1/');
+
   return {server, apollo};
 };
 
-run().then(({server, apollo}) => {
-  console.log(`Server ready at http://localhost:${server.address().port}${apollo.graphqlPath}`);
-});
+run().then(({server, apollo}) => console.log(`Server ready at http://localhost:${server.address().port}${apollo.graphqlPath}`));

@@ -25,4 +25,4 @@ echo 'install dependencies'
 npm i
 
 echo 'run application'
-npm start
+npm run build:start

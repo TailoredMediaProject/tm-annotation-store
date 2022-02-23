@@ -8,7 +8,7 @@
 * start docker (mandatory on mac)
 * run mongo: `docker-compose --env-file .env.dev up`
 * install deps: `npm i`
-* start apollo: `npm start`
+* start apollo: `npm run build:start`
 * open graphql ui: http://localhost:4000/
 
 Or simply run `bash ./scripts/start_clean_app.sh` (and don't forget to shutdown docker-compose afterwards)
