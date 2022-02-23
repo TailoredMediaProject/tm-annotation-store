@@ -52,6 +52,7 @@
     "watch": [
       "./src"
     ],
+    "exec": "npm run build:start",
     "ext": "ts"
   }
 }
