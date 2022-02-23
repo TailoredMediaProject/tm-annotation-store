@@ -31,5 +31,7 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
+src/openapi
 
 .docker/mongodb/data
+/src/openapi/

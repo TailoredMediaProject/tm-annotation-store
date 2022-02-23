@@ -1,18 +1,21 @@
+import {ObjectId} from "mongodb";
 import {
     Body,
-    BodyType, Annotation,
-    MetadataAnnotationBody, Origin,
-    ResourceAnnotationBody,
-    ResourceAnnotationTarget, Selector,
+    BodyType, FragmentResource,
+    MetadataBody,
+    Origin,
+    OriginType,
+    ResourceBody,
+    Selector,
     Target,
     TargetType
-} from "./annotation.model";
-import {ObjectId} from "mongodb";
+} from "../openapi";
+import {Annotation} from "./annotation.model";
 
 export const createAnnotation = (
-    body: Body | Body[],
+    body: Body,
     target: Target | Target[],
-    origin: Origin = {creator: 'AnnotationStore', type: "manual"},
+    origin: Origin = {creator: 'AnnotationStore', type: OriginType.Manual},
     replaces?: string,
     replacedBy?: string): Annotation => {
     return {
@@ -34,14 +37,14 @@ export const createAnnotationBody = (id: string, confidence: number = 100, type:
     }
     if (relation) {
         switch (type) {
-            case "MetadataBody":
-                const metaBody = body as MetadataAnnotationBody;
+            case BodyType.MetadataBody:
+                const metaBody = body as MetadataBody;
                 metaBody.value = value;
                 metaBody.relation = relation;
                 body = metaBody;
                 break;
-            case "ResourceBody":
-                const resourceBody = body as ResourceAnnotationBody;
+            case BodyType.ResourceBody:
+                const resourceBody = body as ResourceBody;
                 resourceBody.value = value;
                 resourceBody.relation = relation;
                 body = resourceBody;
@@ -58,7 +61,7 @@ export const createAnnotationTarget = (type: TargetType, source: string, selecto
     }
 
     if (type === "FragmentResource" && selector) {
-        (target as ResourceAnnotationTarget).selector = selector;
+        (target as FragmentResource).selector = selector;
     }
     return target;
 }

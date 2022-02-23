@@ -1,15 +1,6 @@
-import {Annotation, Body, Origin, Target} from "./annotation.model";
+import {Annotation} from "./annotation.model";
 import {ObjectId} from "mongodb";
-
-export interface AnnotationDto {
-    id: string,
-    origin: Origin,
-    replaces?: string,
-    replacedBy?: string,
-    readonly created: Date,
-    body: Body
-    target: Target | Target[]
-}
+import {Annotation as AnnotationDto} from "../openapi";
 
 const annotationDbo2Dto = (dbo: Annotation): AnnotationDto => ({
     id: dbo._id.toHexString(),
@@ -26,7 +17,7 @@ const annotationDto2Dbo = (dto: AnnotationDto): Annotation => ({
     origin: dto.origin,
     replaces: dto.replaces,
     replacedBy: dto.replacedBy,
-    created: dto.created,
+    created: '',
     body: dto.body,
     target: dto.target,
 });

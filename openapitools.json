@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "5.3.0",
+    "generators": {
+      "annotation-store-client": {
+        "glob": "./node_modules/@redlink/tm-annotation-store-api/api/resource/annotation-spec.yaml",
+        "output": "./src/openapi",
+        "generatorName": "typescript-axios",
+        "additionalProperties": {
+          "supportsES6": "true",
+          "withInterfaces": true,
+          "interfaceOnly": true
+        }
+      }
+    }
+  }
+}

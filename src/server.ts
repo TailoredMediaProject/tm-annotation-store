@@ -21,7 +21,7 @@ const staticDir = process.env.BE_STATIC || 'static';
 const documentBasePath = `/resources/docs/`;
 const annotationBasePath = `/resources/annotations/`;
 
-const mongoConnect: string = (process.env.MONGO_CONNECT || `mongodb://${username}:${password}@${dbHost}:${dbPort}`)
+const mongoConnect: string = (process.env.MONGO_CONNECT || `mongodb://${dbHost}:${dbPort}`)
 const mongo = new Mongo(mongoConnect, database);
 
 const kafkaBroker = process.env.KAFKA_BROKER?.split(',') || ['localhost:9092'];
@@ -74,8 +74,8 @@ const run = async (): Promise<any> => {
   });
 
 
-  app.use('/api/v1/spec.yaml', express.static(path.join(__dirname, `${staticDir}/spec.yaml`)));
-  console.log('Serving "spec.yaml" on /api/v1/');
+  // app.use('/api/v1/spec.yaml', express.static(path.join(__dirname, `${staticDir}/spec.yaml`)));
+  // console.log('Serving "spec.yaml" on /api/v1/');
 
   return {server, apollo};
 };

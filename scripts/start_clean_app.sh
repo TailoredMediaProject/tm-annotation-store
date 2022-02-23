@@ -9,7 +9,8 @@ rm -rf ../.docker/mongodb/data/*
 mkdir -p ../.docker/mongodb/data ../.docker/mongodb/data/db ../.docker/mongodb/data/log
 
 echo 'run environment'
-docker-compose --env-file .env.dev up -d
+//docker-compose --env-file .env.dev up -d
+docker-compose --env-file ./.env.dev up -d
 
 
 sleep 10
@@ -26,4 +27,4 @@ echo 'install dependencies'
 npm i
 
 echo 'run application'
-npm run build:start
+npm start

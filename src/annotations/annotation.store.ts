@@ -1,7 +1,8 @@
 import {AbstractAnnotationStore} from "./abstract-annotation.store";
 import {Annotation} from "./annotation.model";
 import express from "express";
-import {AnnotationDto, exportAnnotation, importAnnotation} from "./annotation-dto.model";
+import {exportAnnotation, importAnnotation} from "./annotation-dto.model";
+import {Annotation as AnnotationDto} from "../openapi";
 import {ObjectId} from "mongodb";
 
 export class AnnotationStore extends AbstractAnnotationStore {

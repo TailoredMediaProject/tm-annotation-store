@@ -5,6 +5,9 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
+    "start:local": "npx nodemon ./src/server.ts",
+    "generate": "npx openapi-generator-cli generate",
+    "generate:build": "npm run generate && npm run build",
     "build": "./scripts/prepair_openapi.sh && tsc",
     "build:start": "npm run build && npm run start",
     "dev:start": "nodemon",
@@ -14,7 +17,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@redlink/tm-annotation-store-api": "^2.0.8",
+    "@redlink/tm-annotation-store-api": "^2.0.12",
     "@types/hash-sum": "^1.0.0",
     "@types/mongodb": "^3.6.12",
     "@types/morgan": "^1.9.3",
@@ -33,7 +36,7 @@
   "devDependencies": {
     "@babel/core": "^7.13.15",
     "@babel/node": "^7.13.13",
-    "@openapitools/openapi-generator-cli": "^2.2.6",
+    "@openapitools/openapi-generator-cli": "^2.4.26",
     "graphql-import-node": "0.0.4",
     "nodemon": "^2.0.15",
     "ts-node": "^10.5.0",
@@ -49,7 +52,6 @@
     "watch": [
       "./src"
     ],
-    "exec": "npm run build:start",
     "ext": "ts"
   }
 }
