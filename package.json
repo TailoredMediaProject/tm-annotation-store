@@ -5,7 +5,6 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
-    "start:local": "npx nodemon ./src/server.ts",
     "generate": "npx openapi-generator-cli generate",
     "generate:build": "npm run generate && npm run build",
     "build": "./scripts/prepair_openapi.sh && tsc",

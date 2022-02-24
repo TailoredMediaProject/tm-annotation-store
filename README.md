@@ -1,22 +1,42 @@
 # Annotation Store
 
-## Development
+Stores annotations
 
-### Start annotations store locally
-* clean mongo data (optional): `rm -rf .docker/mongodb/data`
-* check config (optional): `docker-compose --env-file .env.dev config`
-* start docker (mandatory on mac)
-* run mongo: `docker-compose --env-file .env.dev up`
-* install deps: `npm i`
-* start apollo: `npm run build:start`
-* open graphql ui: http://localhost:4000/
+## Local Development
+
+### Setup
+```shell
+cp .env.dev .env # Copy environment variables. Optional: Change them 
+docker-compose config # Optional: Check config
+# Mandatory on mac: start docker 
+npm i # Install dependencies
+npm run generate:build
+
+```
+### Start
+```shell
+docker-compose up # Start whole application, or
+docker-compose up mongodb # Start only mongodb service
+npm run dev:start # To start the annotation store
+```
+
+Visit open graphql ui on: http://localhost:4000/
 
 Or simply run `bash ./scripts/start_clean_app.sh` (and don't forget to shutdown docker-compose afterwards)
 
+### Stop
+```shell
+docker-compose down # Optional with "-v"
+# In the CLI where you ran "npm run build:start " hit "ctrl + c" to stop nodemon
+```
+
 ### Enter database
 
-Install mongo client. Then you can enter the database (if you use the default environment) via: 
-`mongo -u apollo annotations`, password `apollo`
+Install the mongo client. You may enter the database:
+```shell
+mongo -u <.env#MONGO_USERNAME> <.env#MONGO_DATABASE>
+# When asked for the password, enter .env#MONGO_PASSWORD
+```
 
 ## Graphql Annotations
 Schema is defined in [.api/schema.graphql]

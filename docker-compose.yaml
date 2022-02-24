@@ -1,4 +1,4 @@
-version: '2'
+version: '3.8'
 
 services:
   zookeeper:
@@ -77,21 +77,20 @@ services:
       KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
   mongodb:
     image: mongo:latest
-    container_name: mongodb
-    hostname: mongodb
     volumes:
-      - ./.docker/mongodb/mongod.conf:/etc/mongod.conf
-      - ./.docker/mongodb/initdb.d/:/docker-entrypoint-initdb.d/
-      - ./.docker/mongodb/data/db/:/data/db/
-      - ./.docker/mongodb/data/log/:/var/log/mongodb/
-    env_file:
-      - .env.dev
+      - ./scripts/mongodb-create-user.sh:/docker-entrypoint-initdb.d/mongodb-create-user.sh
+    env_file: .env
     environment:
-      MONGO_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
-      MONGO_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
-      MONGO_USERNAME: ${MONGO_USERNAME}
-      MONGO_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_DATABASE: ${MONGO_DATABASE}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+      MONGO_DB_USERNAME: ${MONGO_USERNAME}
+      MONGO_DB_PASSWORD: ${MONGO_PASSWORD}
     ports:
       - "27017:27017"
-    command: ["-f", "/etc/mongod.conf"]
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/${MONGO_DATABASE} --quiet 1
+      interval: 20s
+      timeout: 10s
+      start_period: 1m
+      retries: 3

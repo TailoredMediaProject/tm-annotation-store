@@ -2,16 +2,10 @@
 set -e
 
 echo 'shutdown existing environment'
-docker-compose --env-file ../.env.dev down
-
-echo 'remove docker data'
-rm -rf ../.docker/mongodb/data/*
-mkdir -p ../.docker/mongodb/data ../.docker/mongodb/data/db ../.docker/mongodb/data/log
+docker-compose down
 
 echo 'run environment'
-//docker-compose --env-file .env.dev up -d
-docker-compose --env-file ./.env.dev up -d
-
+docker-compose up -d
 
 sleep 10
 
@@ -27,4 +21,4 @@ echo 'install dependencies'
 npm i
 
 echo 'run application'
-npm start
+npm run build:start # Does not run nodemon for local development!
