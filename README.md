@@ -38,6 +38,22 @@ mongo -u <.env#MONGO_USERNAME> <.env#MONGO_DATABASE>
 # When asked for the password, enter .env#MONGO_PASSWORD
 ```
 
+### Docker Cheat Sheet
+Build, view, run locally
+
+```shell
+docker build . -t $(whoami)/tm-annotation-store # Build
+docker images # View build, available images
+docker image rm <image_id> # Remove image
+docker run -p 8080:8080 -d $(whoami)/tm-annotation-store # Run image
+docker ps # View running containers
+docker logs <container_id> # Print container logs
+docker stop <container_id> # Stop container
+docker stop $(docker ps --format '{{.ID}}') # For only one running container
+docker system prune # Removes all unused images
+docker exec -it $(docker ps --format '{{.ID}}') /bin/bash # Go into image via bash, works also for mongoshell
+```
+
 ## Graphql Annotations
 Schema is defined in [.api/schema.graphql]
 

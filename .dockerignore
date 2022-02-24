@@ -1,2 +1,11 @@
 node_modules/
 npm-debug.log
+dist/
+.idea
+.insomnia
+.github
+.env
+.env.dev
+.gitignore
+docker-compose.yaml
+README.md

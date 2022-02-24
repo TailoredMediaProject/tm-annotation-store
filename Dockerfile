@@ -1,27 +1,22 @@
-FROM node:14-buster-slim
+ARG buildImage=node:lts-alpine
 
-RUN apt-get update -q && apt-get install -y \
-        tini \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-ENTRYPOINT [ "/usr/bin/tini", "--" ]
-
-# Some node-tweaks
-ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
-ENV PATH=$PATH:/home/node/.npm-global/bin
-
-# Let's go and package
-WORKDIR /src/app
-COPY package*.json ./
-
-RUN npm install
-#RUN npm ci --only=production
-
+FROM $buildImage as build-stage
+WORKDIR /opt/app
+RUN apk add --no-cache openjdk11
 COPY . .
-RUN npx tsc
+RUN npm ci --only=production
+RUN npm run generate:build
+RUN npm prune
 
+FROM $buildImage as production-stage
+RUN apk add --no-cache tini
+WORKDIR /app/
+COPY --from=build-stage /opt/app/dist .
+
+ENV NODE_ENV=production
 ENV MONGO_HOST=mongodb
+ENV MONGO_DATABASE=annotations
 
-EXPOSE 4000
 USER node
-CMD [ "node", "dist/server.js" ]
+EXPOSE 4000
+ENTRYPOINT ["/sbin/tini", "--", "docker-entrypoint.sh", "server.js" ]
