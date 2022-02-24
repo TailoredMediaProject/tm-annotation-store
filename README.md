@@ -26,7 +26,7 @@ Or simply run `bash ./scripts/start_clean_app.sh` (and don't forget to shutdown 
 
 ### Stop
 ```shell
-docker-compose down # Optional with "-v"
+docker-compose down # Optional with "-v", can be important on first run!
 # In the CLI where you ran "npm run build:start " hit "ctrl + c" to stop nodemon
 ```
 

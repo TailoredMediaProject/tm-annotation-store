@@ -89,8 +89,8 @@ services:
     ports:
       - "27017:27017"
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/${MONGO_DATABASE} --quiet 1
-      interval: 20s
-      timeout: 10s
-      start_period: 1m
+      test: echo 'db.runCommand("ping").ok' | mongo mongodb:27017/${MONGO_DATABASE} --quiet
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
       retries: 3
