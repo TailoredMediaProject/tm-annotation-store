@@ -5,7 +5,7 @@ export class KafkaConsumer {
     private readonly consumer: Consumer;
     private observations: IConsumerObserver[] = [];
 
-    constructor(kafka: Kafka, config?: ConsumerConfig) {
+    constructor(kafka: Kafka, config: ConsumerConfig) {
         this.consumer = kafka.consumer(config)
     }
 

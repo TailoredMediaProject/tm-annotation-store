@@ -20,7 +20,7 @@ export const createAnnotation = (
     replacedBy?: string): Annotation => {
     return {
         _id: new ObjectId(),
-        created: new Date(),
+        created: new Date().toISOString(),
         origin,
         body,
         target,
