@@ -73,9 +73,8 @@ const run = async (): Promise<any> => {
     // annotationMessageManager.shutdown();
   });
 
-
-  // app.use('/api/v1/spec.yaml', express.static(path.join(__dirname, `${staticDir}/spec.yaml`)));
-  // console.log('Serving "spec.yaml" on /api/v1/');
+  app.use('/api/v1/spec.yaml', express.static(path.join(__dirname, `${staticDir}/spec.yaml`)));
+  console.log('Serving "spec.yaml" on /api/v1/');
 
   return {server, apollo};
 };
