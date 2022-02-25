@@ -38,14 +38,18 @@ export class DocumentMessageManager extends MessageManager {
         return new Promise<any>(((resolve, reject) => {
             try {
                 const id = JSON.parse(content.toString()).id;
-                this.documentStore.deleteDocument(id, (error) => {
-                    if (error) {
-                        console.error('Error deleting document: ', error);
-                        return reject(error);
+                this.documentStore.deleteDocument(id)
+                .then((deleteCount: number) => {
+                    if(deleteCount === 1) {
+                        resolve(id);
                     } else {
-                        return resolve(id);
+                        return reject(new Error('Could not find ID'));
                     }
                 })
+              .catch(err => {
+                  console.error('Error deleting document: ', err);
+                  return reject(err);
+              });
             } catch (e) {
                 console.log(e);
                 reject(e);

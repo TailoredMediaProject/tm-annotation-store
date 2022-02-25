@@ -85,21 +85,23 @@ export class DocumentStore {
 
   private deleteTextDocument(res: any, id: string): void {
     if (ObjectId.isValid(id)) {
-      this.deleteDocument(id, (err) => {
-        if (err) {
-          DocumentStore.setError(res, 500, err.message);
-        } else {
-          res.status(200).end();
-        }
-      });
+      this.deleteDocument(id)
+        .then(deleteCount => {
+          if(deleteCount === 1) {
+            res.status(200).end();
+          } else {
+            res.status(404).end();
+          }
+        })
+        .catch(err => DocumentStore.setError(res, 500, err.message));
     } else {
       DocumentStore.setError(res, 400, 'Invalid id');
     }
   }
 
-  deleteDocument(objectId: string, callback: Callback<DeleteResult>): void {
-    const _id = new ObjectId(objectId);
-    this.config.documentsCollection.deleteOne({ _id }, callback);
+  deleteDocument(objectId: string): Promise<number> {
+    return this.config.documentsCollection.deleteOne({ _id: new ObjectId(objectId)})
+      .then((result: DeleteResult) => result.deletedCount)
   }
 
   private static setError(res: any, status: number, msg: string) {
