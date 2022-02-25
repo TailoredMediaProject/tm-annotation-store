@@ -5,11 +5,12 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
-    "generate": "npx openapi-generator-cli generate",
+    "generate": "openapi-generator-cli generate",
     "generate:build": "npm run generate && npm run build",
-    "build": "./scripts/prepair_openapi.sh && tsc",
+    "build": "sh ./scripts/prepair_openapi.sh && tsc",
     "build:start": "npm run build && npm run start",
     "dev:start": "nodemon",
+    "package": "npm run generate:build && copy-node-modules . ./dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -36,6 +37,7 @@
     "@babel/core": "^7.13.15",
     "@babel/node": "^7.13.13",
     "@openapitools/openapi-generator-cli": "^2.4.26",
+    "copy-node-modules": "^1.1.1",
     "graphql-import-node": "0.0.4",
     "nodemon": "^2.0.15",
     "ts-node": "^10.5.0",
