@@ -1,8 +1,9 @@
 import {AnnotationStoreConfig} from "./config";
 import {DataSource} from "apollo-datasource";
 import express from "express";
-import {ObjectId} from "mongodb";
+import {Filter, InsertManyResult, ObjectId, UpdateResult, WithId} from 'mongodb';
 import {ValidationError} from "apollo-server";
+import {Annotation} from './model';
 
 export abstract class AbstractAnnotationStore extends DataSource {
     protected readonly annotationBaseURI: string;
@@ -14,7 +15,7 @@ export abstract class AbstractAnnotationStore extends DataSource {
         this.contextLinks = [
             'https://www.w3.org/ns/anno.jsonld'
         ]
-        console.info(`Initialized AnnotationStore with baseURI <${this.annotationBaseURI}>`);
+        console.info(`Initialized AnnotationStore with baseURI ${this.annotationBaseURI}`);
     }
 
     protected getAnnotationBaseURI(): string {
@@ -39,14 +40,20 @@ export abstract class AbstractAnnotationStore extends DataSource {
             .then(document => document.insertedId);
     }
 
-    public pushAnnotations(annotations: any): Promise<any> {
+    public pushAnnotations(annotations: Annotation[]): Promise<Annotation[]> {
         return this.config.annotationsCollection
-            .insertMany(annotations.map((annotation: any) => ({
-                _id: null,
+            .insertMany(annotations.map((annotation: Annotation) => ({
+                // @ts-ignore
+                _id: undefined,
                 created: new Date(),
                 ...annotation
             })))
-            .then(documents => documents.ops);
+            .then((documents: InsertManyResult<Annotation[]>) => {
+                console.log("Pushed Annotation IDs");
+                console.log(documents.insertedIds);
+                documents.insertedIds;
+                return annotations; // TODO MAP IDs
+            });
     }
 
     protected insertOneIfNotExisting(annotation: any): Promise<any> {
@@ -63,7 +70,7 @@ export abstract class AbstractAnnotationStore extends DataSource {
                 }
             }, {
                 upsert: true
-            }).then(document => document.result);
+            }).then((document: UpdateResult) => document.upsertedId);
     }
 
     public getAnnotationFromId(id: string | ObjectId): Promise<any> {
@@ -90,8 +97,10 @@ export abstract class AbstractAnnotationStore extends DataSource {
             });
     }
 
-    public listAnnotations(filter?: Document[]): Promise<any> {
+    public listAnnotations(filter?: Filter<Annotation[]>): Promise<Annotation[]> {
+        // @ts-ignore
         return this.config.annotationsCollection
+            // @ts-ignore
             .find(filter)
             .toArray();
     }
@@ -101,7 +110,7 @@ export abstract class AbstractAnnotationStore extends DataSource {
         return this.deleteAnnotations({_id: this.objectIdFromUrl(url)});
     }
 
-    public deleteAnnotations(filter: Document[]): Promise<void> {
+    public deleteAnnotations(filter: Annotation[]): Promise<void> {
         return this.config.annotationsCollection.deleteMany(filter).then();
     }
 

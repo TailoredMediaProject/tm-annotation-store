@@ -51,7 +51,7 @@ docker logs <container_id> # Print container logs
 docker stop <container_id> # Stop container
 docker stop $(docker ps --format '{{.ID}}') # For only one running container
 docker system prune # Removes all unused images
-docker exec -it $(docker ps --format '{{.ID}}') /bin/bash # Go into image via bash, works also for mongoshell
+docker exec -it $(docker ps --format '{{.ID}}') /bin/sh # Go into running image via bash, works also for mongoshell
 ```
 
 ## Graphql Annotations
@@ -168,3 +168,35 @@ API is defined in [.api/doc-store-spec.yaml]
   "content": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed.."
   }'```
 * Delete Text Document: `curl DELETE http://localhost:4000/resources/docs/texts/123abc`
+
+### Example MongoDB Entry
+
+```
+documents
+> db.documents.findOne()
+{
+        "_id" : ObjectId("616808eada117f00072413ba"),
+        "title" : "Corona",
+        "content" : "Die Auffrischungsimpfungen sind bereits voll im Gange, heute hat die Stadt Wien den weiteren Fahrplan vorgestellt und überdies eine umfassende Bilanz gezogen: 139.229 Wienerinnen und Wiener wurden seit Juli zum dritten Mal geimpft, davon über 70.000 bei mobilen Sonderimpfaktionen."
+}
+> db.annotations.findOne()
+{
+        "_id" : ObjectId("61680b7d3681090009873f57"),
+        "value" : {
+                "type" : "Annotation",
+                "body" : {
+                        "id" : "News",
+                        "type" : "type",
+                        "label" : "News"
+                },
+                "target" : {
+                        "id" : "616808eada117f00072413ba",
+                        "type" : "http://purl.org/dc/dcmitype/Text"
+                }
+        },
+        "_metadata" : {
+                "created" : 1634208637756,
+                "hashSum" : "70fd3eba"
+        }
+}
+```

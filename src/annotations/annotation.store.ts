@@ -3,7 +3,7 @@ import {Annotation} from "./annotation.model";
 import express from "express";
 import {exportAnnotation, importAnnotation} from "./annotation-dto.model";
 import {Annotation as AnnotationDto} from "../openapi";
-import {ObjectId} from "mongodb";
+import {Filter, ObjectId} from 'mongodb';
 
 export class AnnotationStore extends AbstractAnnotationStore {
 
@@ -19,9 +19,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
                 }
             }).get((req, res, next) => {
                 this.listAnnotations()
-                    .then(annotations => {
-                        res.json(annotations);
-                    })
+                    .then(annotations => res.json(annotations))
                     .catch(next)
             });
         router.route('/:id')
@@ -41,13 +39,18 @@ export class AnnotationStore extends AbstractAnnotationStore {
         return router;
     }
 
-    private push(annotations: AnnotationDto | AnnotationDto[]): Promise<any> {
-        if (Array.isArray(annotations)) {
-            return this.pushAnnotations(annotations.map(importAnnotation))
-                .then(insertedAnnotations => this.mapOldIdToNewId(annotations, insertedAnnotations, this.annotationBaseURI));
+    private push(annotationsDtos: AnnotationDto | AnnotationDto[]): Promise<any> {
+        if (Array.isArray(annotationsDtos)) {
+            // @ts-ignore
+            return this.pushAnnotations(annotationsDtos.map(importAnnotation))
+              // @ts-ignore
+                .then((insertedAnnotations: Annotation[]) =>
+                  // @ts-ignore
+                  this.mapOldIdToNewId(annotationsDtos, insertedAnnotations, this.annotationBaseURI)
+                );
         }
         // return this.insertOneIfNotExisting(importAnnotation(annotations));
-        return this.pushAnnotation(importAnnotation(annotations))
+        return this.pushAnnotation(importAnnotation(annotationsDtos))
             .then(objectId => ({id: objectId.toHexString()}));
     }
 
@@ -55,19 +58,19 @@ export class AnnotationStore extends AbstractAnnotationStore {
         return super.pushAnnotation(annotation)
     }
 
-    override pushAnnotations(annotations: Annotation[]): Promise<Annotation[]> {
-        return super.pushAnnotations(annotations);
-    }
-
     protected override async getAnnotation(_id: ObjectId, prefixed: boolean = false): Promise<any> {
         return this.exportDboToDto(await super.getAnnotation(_id, prefixed));
     }
 
-    override listAnnotations(filter?: Document[]): Promise<any> {
+    // @ts-ignore
+    listAnnotations(filter?: Filter<Annotation[]>): Promise<AnnotationDto[]> {
         const uri = this.annotationBaseURI;
+        // @ts-ignore
         return super.listAnnotations(filter)
-            .then((annotations: Annotation[]) => annotations
-                .map(annotation => exportAnnotation(annotation, uri)));
+          // @ts-ignore
+            .then((annotations: Annotation[]): AnnotationDto[] =>
+              annotations.map(annotation => exportAnnotation(annotation, uri))
+            );
     }
 
     protected exportDboToDto(annotation: Annotation): AnnotationDto {
@@ -76,6 +79,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
 
     private mapOldIdToNewId(annotations: AnnotationDto[], storedAnnotations: Annotation[], asURL: string = ''): {[key: string]: string} {
         const idDict: {[key: string]: string} = {};
+
         annotations.forEach(annotation => {
             const found = storedAnnotations.find(item =>
                 item.origin === annotation.origin

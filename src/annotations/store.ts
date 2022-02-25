@@ -34,7 +34,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
         return super.getAnnotation(_id, prefixed).then(this.getAnnotationFromDoc);
     }
 
-    override listAnnotations(filter?: Document[]): Promise<any> {
+    override listAnnotations(filter?: Annotation[]): Promise<Annotation[]> {
         return super.listAnnotations(filter).then(docs => docs.map(this.getAnnotationFromDoc));
     }
 

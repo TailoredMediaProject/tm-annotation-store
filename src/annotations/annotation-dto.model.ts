@@ -23,14 +23,15 @@ const annotationDto2Dbo = (dto: AnnotationDto): Annotation => ({
 });
 
 export const exportAnnotation = (annotation: Annotation, annotationBaseURI: string = ''): AnnotationDto => {
-    const dto = annotationDbo2Dto(annotation);
+    const dto: AnnotationDto = annotationDbo2Dto(annotation);
     dto.id = annotationBaseURI + dto.id;
     return dto;
 }
 
-export const importAnnotation = (annotation: any): Annotation => {
-    if (annotation && annotation._id !== undefined) {
-        return annotation as Annotation;
+export const importAnnotation = (dto: AnnotationDto): Annotation => {
+    if (!!dto?.id) {
+        return annotationDto2Dbo(dto);
     }
-    return annotationDto2Dbo(annotation as AnnotationDto);
+    // @ts-ignore
+    return dto as Annotation;
 }

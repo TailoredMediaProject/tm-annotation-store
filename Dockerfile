@@ -15,9 +15,11 @@ WORKDIR /app/
 COPY --from=build-stage /opt/app/dist .
 
 ENV NODE_ENV=production
+# prod: mongodb, local for testing: localhost, just comment the next line
 ENV MONGO_HOST=mongodb
 ENV MONGO_DATABASE=annotations
 
 USER node
 EXPOSE 4000
 ENTRYPOINT ["/sbin/tini", "--", "docker-entrypoint.sh", "server.js" ]
+# ENTRYPOINT [ "sh", "-c", "while true; do sleep 20; done"]
