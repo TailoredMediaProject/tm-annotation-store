@@ -7,7 +7,6 @@ COPY ./ ./
 # RUN npm ci --only=production, # openapi-generator makes problems here
 RUN npm i
 RUN npm run package
-# RUN npm run generate:build
 # RUN npm prune
 
 FROM $buildImage as production-stage
@@ -16,8 +15,8 @@ WORKDIR /app/
 COPY --from=build-stage /opt/app/dist .
 
 ENV NODE_ENV=production
-# prod: mongodb, local for testing: localhost
-ENV MONGO_HOST=localhost
+# prod: mongodb, local for testing: localhost, just comment the next line
+ENV MONGO_HOST=mongodb
 ENV MONGO_DATABASE=annotations
 
 USER node
