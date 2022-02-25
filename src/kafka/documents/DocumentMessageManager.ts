@@ -1,8 +1,8 @@
-import {MessageManager} from "../messageManager/MessageManager";
-import {DocumentStore} from "../../documents/store";
-import {IMessageManagerConfig} from "../messageManager/IMessageManagerConfig";
-import {ObjectId} from "mongodb";
-import bufferToJson from "../JSONConverter";
+import {MessageManager} from '../messageManager/MessageManager';
+import {DocumentStore} from '../../documents/store';
+import {IMessageManagerConfig} from '../messageManager/IMessageManagerConfig';
+import bufferToJson from '../JSONConverter';
+import {TextDocument} from '../../documents/model';
 
 export class DocumentMessageManager extends MessageManager {
     private documentStore: DocumentStore;
@@ -16,17 +16,17 @@ export class DocumentMessageManager extends MessageManager {
         return new Promise(((resolve, reject) => {
             try {
                 const docContent = bufferToJson(content);
+
                 if (!docContent) {
-                    return reject('Document (Create): Content not valid!');
+                    reject('Document (Create): Content not valid!');
                 }
-                this.documentStore.createDocument(docContent, {}, (error, doc) => {
-                    if (error) {
-                        console.error('Error: Creating a document had an error: ', error);
-                        return reject(error);
-                    }
-                    console.log('Successfully added a text document!');
-                    resolve(doc?.insertedId);
-                });
+
+                this.documentStore.createDocument(docContent)
+                  .then((doc: TextDocument) => resolve(doc))
+                  .catch(err => {
+                      console.error('Error: Creating a document had an error: ', err);
+                      reject(err);
+                  });
             } catch (error) {
                 console.log(error);
                 reject(error);

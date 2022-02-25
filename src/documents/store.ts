@@ -9,7 +9,7 @@ export class DocumentStore {
 
   constructor(private config: DocumentStoreConfig) {
     this.textDocumentBaseURI = `${config.baseURI}${config.documentBasePath}texts/`;
-    console.info(`Initialized DocumentStore with baseURI <${this.textDocumentBaseURI}>`);
+    console.info(`Initialized DocumentStore with baseURI ${this.textDocumentBaseURI}`);
   }
 
   public applyMiddleware(app: express.Application): void {
@@ -30,6 +30,7 @@ export class DocumentStore {
       if (err) {
         DocumentStore.setError(res, 500, err.message);
       } else {
+        // @ts-ignore
         this.setStatisticsToDocuments(docs.map(d => TextDocument.fromStorage(d, this.textDocumentBaseURI)))
           .then(updatedDoc => res.json(updatedDoc));
       }
@@ -40,29 +41,34 @@ export class DocumentStore {
     try {
       const document: TextDocument = TextDocument.fromRequest(req.body);
 
-      this.config.documentsCollection.insertOne({ title: document.title, content: document.content })
-        .then((result: InsertOneResult<TextDocument>) => this.afterTextDocumentInsertion(result.insertedId, res))
-        .catch(err => DocumentStore.setError(res, 500, err.message));
+      this.createDocument(document)
+        .then((textDocument: TextDocument) =>
+          this.setStatistics(TextDocument.fromStorage(textDocument, this.textDocumentBaseURI))
+            .then(updatedDoc => res.status(201).json(updatedDoc))
+        );
     } catch (err) {
       // @ts-ignore
       DocumentStore.setError(res, 400, err.message);
     }
   }
 
-  private afterTextDocumentInsertion(id: ObjectId, res): void {
-    this.config.documentsCollection.findOne({_id: id})
-      .then((textDocument: WithId<TextDocument>) => {
-        this.setStatistics(TextDocument.fromStorage(textDocument, this.textDocumentBaseURI))
-          .then(updatedDoc => res.status(201).json(updatedDoc));
-      })
-      .catch(err => DocumentStore.setError(res, 404, 'Could not find inserted text document: ' + err.toString()));
+  public createDocument (doc: TextDocument): Promise<TextDocument> {
+    return this.config.documentsCollection.insertOne(doc)
+      .then((result: InsertOneResult<TextDocument>): Promise<TextDocument> =>
+        this.config.documentsCollection.findOne({_id: result.insertedId})
+             // @ts-ignore
+           .then((inserted: WithId<TextDocument>): TextDocument =>
+             inserted as TextDocument
+           )
+      );
   }
 
   private getTextDocument(res: any, id: string): void {
     if (ObjectId.isValid(id)) {
       this.config.documentsCollection.find({ _id: new ObjectId(id) })
         .toArray()
-        .then((value: WithId<Document>[]) => {
+        // @ts-ignore
+        .then((value: WithId<TextDocument>[]) => {
           if (value?.length === 0) {
             DocumentStore.setError(res, 404, 'Text document not found');
           } else {

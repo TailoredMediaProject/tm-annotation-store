@@ -112,7 +112,7 @@ export class Filter {
         this.targetId = json.targetId;
     }
 
-    toMongoFilter(): Document[] {
+    toMongoFilter(): Annotation[] {
         // @ts-ignore
         return [{$or:[{'value.target.id':{$eq:this.targetId}},{'value.target.source':{$eq:this.targetId}}]}];
     }
