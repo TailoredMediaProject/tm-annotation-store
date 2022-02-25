@@ -14,10 +14,13 @@ RUN apk add --no-cache tini
 WORKDIR /app/
 COPY --from=build-stage /opt/app/dist .
 
+RUN ls -l
+
 ENV NODE_ENV=production
 ENV MONGO_HOST=mongodb
 ENV MONGO_DATABASE=annotations
 
 USER node
 EXPOSE 4000
-ENTRYPOINT ["/sbin/tini", "--", "docker-entrypoint.sh", "server.js" ]
+# ENTRYPOINT ["/sbin/tini", "--", "docker-entrypoint.sh", "server.js" ]
+ENTRYPOINT [ "sh", "-c", "while true; do foo; sleep 20; done"]

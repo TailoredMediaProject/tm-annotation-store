@@ -51,7 +51,7 @@ docker logs <container_id> # Print container logs
 docker stop <container_id> # Stop container
 docker stop $(docker ps --format '{{.ID}}') # For only one running container
 docker system prune # Removes all unused images
-docker exec -it $(docker ps --format '{{.ID}}') /bin/bash # Go into image via bash, works also for mongoshell
+docker exec -it $(docker ps --format '{{.ID}}') /bin/bash # Go into running image via bash, works also for mongoshell
 ```
 
 ## Graphql Annotations
