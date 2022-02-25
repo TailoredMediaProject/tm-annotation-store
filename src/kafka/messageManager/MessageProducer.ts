@@ -38,7 +38,6 @@ export abstract class MessageProducer {
                 if (this.topicExists(topic)) {
                     const value = JSON.stringify({id});
                     if (!MessageProducer.checkHeaders(headers)) {
-                        console.log(headers);
                         return reject('Headers are not valid!');
                     }
                     return this.kafkaClient

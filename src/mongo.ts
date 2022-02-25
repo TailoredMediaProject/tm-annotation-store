@@ -11,8 +11,6 @@ export class Mongo {
     const password = process.env.MONGO_PASSWORD || 'apollo';
     const url: string = (process.env.MONGO_CONNECT || `mongodb://${username}:${password}@${dbHost}:${dbPort}/${database}`);
 
-    console.log(url);
-
     const mongoClientOptions: MongoClientOptions = {
       connectTimeoutMS: 5000,
       serverSelectionTimeoutMS: 5000

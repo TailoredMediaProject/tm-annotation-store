@@ -78,6 +78,6 @@ run()
     console.log(`Serving spec on http://localhost:${server.address().port}/api/v1/spec.yaml`);
   })
   .catch(error => {
-    console.log(error);
-    kafka.shutdown().then(() => console.log('Disconnected from Kafka!'));
+    console.error(error);
+    kafka.shutdown().then(() => console.error('Disconnected from Kafka!'));
 });

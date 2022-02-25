@@ -28,7 +28,7 @@ export class DocumentMessageManager extends MessageManager {
                       reject(err);
                   });
             } catch (error) {
-                console.log(error);
+                console.error(error);
                 reject(error);
             }
         }));
@@ -51,7 +51,7 @@ export class DocumentMessageManager extends MessageManager {
                   return reject(err);
               });
             } catch (e) {
-                console.log(e);
+                console.error(e);
                 reject(e);
             }
         }));
