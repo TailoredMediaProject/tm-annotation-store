@@ -22,7 +22,7 @@ const documentBasePath = `/resources/docs/`;
 const annotationBasePath = `/resources/annotations/`;
 
 const mongoConnect: string = (process.env.MONGO_CONNECT || `mongodb://${dbHost}:${dbPort}`)
-const mongo = new Mongo(mongoConnect, database);
+const mongo = new Mongo(mongoConnect, database, username, password);
 
 const kafkaBroker = process.env.KAFKA_BROKER?.split(',') || ['localhost:9092'];
 const kafkaConsumerGroupId = process.env.KAFKA_CONSUMER_GROUP_ID?.split(',') || ['testDocumentStoreGroup', 'testAnnotationStoreGroup'];
@@ -43,6 +43,7 @@ const run = async (): Promise<any> => {
 
   const annotationStore = new AnnotationStore({annotationsCollection, annotationBasePath, baseURI});
 
+  // @ts-ignore
   const apollo = new ApolloServer({
     schema,
     dataSources: () => ({

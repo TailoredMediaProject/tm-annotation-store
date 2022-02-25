@@ -25,7 +25,7 @@ export class DocumentMessageManager extends MessageManager {
                         return reject(error);
                     }
                     console.log('Successfully added a text document!');
-                    resolve(doc.insertedId);
+                    resolve(doc?.insertedId);
                 });
             } catch (error) {
                 console.log(error);
