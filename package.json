@@ -9,7 +9,7 @@
     "generate:build": "npm run generate && npm run build",
     "build": "sh ./scripts/prepair_openapi.sh && tsc",
     "build:start": "npm run build && npm run start",
-    "dev:start": "nodemon",
+    "dev:start": "nodemon ./src/server.ts",
     "package": "npm run generate:build && copy-node-modules . ./dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -53,7 +53,6 @@
     "watch": [
       "./src"
     ],
-    "exec": "npm run build:start",
     "ext": "ts"
   }
 }

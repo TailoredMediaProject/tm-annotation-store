@@ -17,7 +17,7 @@ npm run generate:build
 ```shell
 docker-compose up # Start whole application, or
 docker-compose up mongodb # Start only mongodb service
-npm run dev:start # To start the annotation store
+npm run dev:start # To start the annotation store, you may want to create an npm run config with "--inspect --require ts-node/register" as node arguments
 ```
 
 Visit open graphql ui on: http://localhost:4000/
