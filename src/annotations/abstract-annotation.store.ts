@@ -1,9 +1,9 @@
 import {AnnotationStoreConfig} from "./config";
 import {DataSource} from "apollo-datasource";
 import express from "express";
-import {Filter, InsertManyResult, ObjectId, UpdateResult, WithId} from 'mongodb';
+import {Filter, InsertManyResult, ObjectId, WithId} from 'mongodb';
 import {ValidationError} from "apollo-server";
-import {Annotation} from './model';
+import {Body} from "../openapi";
 
 export abstract class AbstractAnnotationStore extends DataSource {
     protected readonly annotationBaseURI: string;
@@ -33,27 +33,28 @@ export abstract class AbstractAnnotationStore extends DataSource {
     public pushAnnotation(annotation: any): Promise<ObjectId> {
         return this.config.annotationsCollection
             .insertOne({
+                ...annotation,
                 _id: null,
                 created: new Date(),
-                ...annotation
             })
             .then(document => document.insertedId);
     }
 
-    public pushAnnotations(annotations: Annotation[]): Promise<Annotation[]> {
+    public pushAnnotations(annotations: any): Promise<any> {
         return this.config.annotationsCollection
-            .insertMany(annotations.map((annotation: Annotation) => ({
+            .insertMany(annotations.map((annotation: any) => ({
+                ...annotation,
                 // @ts-ignore
                 _id: undefined,
                 created: new Date(),
-                ...annotation
+                body: Array.isArray(annotation.body) ? annotation.body.map((body: Body) => ({
+                    ...body,
+                    id: new ObjectId()
+                })) : annotation.body.id = {...annotation.body, id: new ObjectId()}
             })))
-            .then((documents: InsertManyResult<Annotation[]>) => {
-                console.log("Pushed Annotation IDs");
-                console.log(documents.insertedIds);
-                documents.insertedIds;
-                return annotations; // TODO MAP IDs
-            });
+            .then((document: InsertManyResult<Document>) => this
+                .listAnnotations({'_id': {'$in': Object.keys(document.insertedIds)
+                        .map((key: any) => document.insertedIds[key])}}));
     }
 
     protected insertOneIfNotExisting(annotation: any): Promise<any> {
@@ -64,13 +65,13 @@ export abstract class AbstractAnnotationStore extends DataSource {
                 target: annotation.target
             }, {
                 $setOnInsert: {
+                    ...annotation,
                     _id: null,
                     created: new Date(),
-                    ...annotation
                 }
             }, {
                 upsert: true
-            }).then((document: UpdateResult) => document.upsertedId);
+            }).then(document => document);
     }
 
     public getAnnotationFromId(id: string | ObjectId): Promise<any> {
@@ -97,7 +98,7 @@ export abstract class AbstractAnnotationStore extends DataSource {
             });
     }
 
-    public listAnnotations(filter?: Filter<Annotation[]>): Promise<Annotation[]> {
+    public listAnnotations(filter?: Filter<any>): Promise<any> {
         // @ts-ignore
         return this.config.annotationsCollection
             // @ts-ignore
@@ -110,7 +111,7 @@ export abstract class AbstractAnnotationStore extends DataSource {
         return this.deleteAnnotations({_id: this.objectIdFromUrl(url)});
     }
 
-    public deleteAnnotations(filter: Annotation[]): Promise<void> {
+    public deleteAnnotations(filter: any): Promise<void> {
         return this.config.annotationsCollection.deleteMany(filter).then();
     }
 

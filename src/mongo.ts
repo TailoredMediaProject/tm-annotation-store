@@ -15,7 +15,13 @@ export class Mongo {
       connectTimeoutMS: 5000,
       serverSelectionTimeoutMS: 5000
     } as MongoClientOptions;
-    this.client = new MongoClient(url, mongoClientOptions);
+    try {
+      this.client = new MongoClient(url, mongoClientOptions);
+      console.log("Connected to Mongo on URL " + dbHost + ':' + dbPort + '/' + database + ' with user ' + username);
+    } catch (error) {
+      console.error(error);
+      console.error("Could not connect to Mongo on " + url);
+    }
   }
 
   getCollection(collectionName: string): Promise<Collection> {
