@@ -1,0 +1,17 @@
+{
+  "name": "init-kafka",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "sleep 30 && node index.js",
+    "debug": "node index.js"
+  },
+  "keywords": ["init", "kafka"],
+  "author": "manuel.schrempf@redlink.at",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.26.0",
+    "@redlink/tm-annotation-store-api": "^2.0.12"
+  }
+}
