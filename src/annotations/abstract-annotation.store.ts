@@ -66,7 +66,7 @@ export abstract class AbstractAnnotationStore extends DataSource {
             }, {
                 $setOnInsert: {
                     ...annotation,
-                    _id: null,
+                    _id: undefined,
                     created: new Date(),
                 }
             }, {
