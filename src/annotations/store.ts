@@ -1,7 +1,7 @@
 import {ObjectId} from 'mongodb';
 import {Annotation} from './model';
 import express from 'express';
-import {AbstractAnnotationStore} from "./abstract-annotation.store";
+import {AbstractAnnotationStore} from './abstract-annotation.store';
 
 export class AnnotationStore extends AbstractAnnotationStore {
     protected addRoutes(router: express.Router): express.Router {

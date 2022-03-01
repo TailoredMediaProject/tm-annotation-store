@@ -93,7 +93,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
           // @ts-ignore
           .then((insertedAnnotations: AnnotationDto[]) =>
             // @ts-ignore
-            this.mapOldIdToNewId(annotationsDtos, insertedAnnotations, this.annotationBaseURI)
+            this.mapOldIdToNewId(annotationsDtos, insertedAnnotations)
           );
       }
     }
@@ -114,7 +114,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
       .then((annotations: any): AnnotationDto[] =>
         annotations.map((annotation: any) => {
 
-          if(Array.isArray(annotation.body)) {
+          if (Array.isArray(annotation.body)) {
             annotation.body = annotation.body.map((body: any) => ({ ...body, id: body.id.toHexString() }));
           } else {
             annotation.body = { ...annotation.body, id: annotation.body.id.toHexString() };
@@ -129,7 +129,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
     return exportAnnotation(annotation, this.annotationBaseURI);
   }
 
-  private mapOldIdToNewId(olds: AnnotationDto[], stored: AnnotationDto[], asURL: string = ''): { [key: string]: AnnotationDto } {
+  private mapOldIdToNewId(olds: AnnotationDto[], stored: AnnotationDto[]): { [key: string]: AnnotationDto } {
     const idDict: { [key: string]: AnnotationDto } = {};
 
     olds.forEach(old => {

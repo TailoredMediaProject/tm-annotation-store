@@ -1,7 +1,7 @@
 import {AnnotationStoreConfig} from './config';
 import {DataSource} from 'apollo-datasource';
 import express from 'express';
-import {Filter, InsertManyResult, ObjectId} from 'mongodb';
+import {Filter, InsertManyResult, InsertOneResult, ModifyResult, ObjectId} from 'mongodb';
 import {ValidationError} from 'apollo-server';
 import {Body} from '../openapi';
 import {Annotation} from './annotation.model';
@@ -32,33 +32,53 @@ export abstract class AbstractAnnotationStore extends DataSource {
   protected abstract addRoutes(router: express.Router): express.Router;
 
   public pushAnnotation(annotation: any): Promise<ObjectId> {
+    // Each annotation gets inserted
     return this.config.annotationsCollection
       .insertOne({
         ...annotation,
         created: new Date()
       })
-      .then(document => document.insertedId);
+      .then(async (insertOneResult: InsertOneResult<Annotation>) => {
+        // Check if there are equal, but other annotations
+        // @ts-ignore
+        const updatedResult: ModifyResult<Annotation> = await this.config.annotationsCollection.findOneAndUpdate(
+          {
+            _id: {$ne: insertOneResult.insertedId},
+            origin: annotation.origin,
+            body: annotation.body,
+            target: annotation.target,
+            replacedBy: undefined
+          },
+          {
+            $set: {
+              replacedBy: insertOneResult.insertedId
+            }
+          },
+          {
+            returnDocument: 'after'
+          }
+        );
 
-    // // @ts-ignore
-    // return this.config.annotationsCollection.findOneAndUpdate(
-    //   {
-    //     origin: annotation.origin,
-    //     body: annotation.body,
-    //     target: annotation.target
-    //   }, {
-    //     $set: {
-    //       ...annotation,
-    //       created: new Date()
-    //     }
-    //   }, {
-    //     upsert: true,
-    //     returnDocument: 'after'
-    //   })
-    //   // @ts-ignore
-    //   .then((value ) => value);
+        // The old annotation was updated
+        if (!!updatedResult?.value?._id && !!updatedResult?.value?.replacedBy) {
+          // So create its link to the new one. As we only return the updated ID, no need to wait here for update finish
+          void this.config.annotationsCollection.findOneAndUpdate(
+            {
+              _id: insertOneResult.insertedId
+            },
+            {
+              $set: {
+                replaces: updatedResult?.value?._id
+              }
+            }
+          );
+        }
+
+        return insertOneResult.insertedId;
+      });
   }
 
-  public pushAnnotations(annotations: Annotation[]): Promise<any> {
+  public pushAnnotations(annotations: any): Promise<any> {
     return this.config.annotationsCollection
       .insertMany(annotations.map((annotation: any) => ({
         ...annotation,
