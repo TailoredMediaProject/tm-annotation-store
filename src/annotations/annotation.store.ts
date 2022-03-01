@@ -1,7 +1,7 @@
 import {AbstractAnnotationStore} from './abstract-annotation.store';
 import {Annotation} from './annotation.model';
 import express from 'express';
-import {exportAnnotation, importAnnotation} from './annotation-dto.model';
+import {exportAnnotation, optionalConvertDto2Dbo} from './annotation.converter';
 import {Annotation as AnnotationDto, Body} from '../openapi';
 import {Filter, ObjectId} from 'mongodb';
 import _ from 'lodash';
@@ -89,7 +89,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
         return Promise.reject();
       } else {
         // @ts-ignore
-        return this.pushAnnotations(annotationsDtos.map(importAnnotation))
+        return this.pushAnnotations(annotationsDtos.map(optionalConvertDto2Dbo))
           // @ts-ignore
           .then((insertedAnnotations: AnnotationDto[]) =>
             // @ts-ignore
@@ -97,13 +97,8 @@ export class AnnotationStore extends AbstractAnnotationStore {
           );
       }
     }
-    return this.insertOneIfNotExisting(importAnnotation(annotationsDtos));
-    //return this.pushAnnotation(importAnnotation(annotationsDtos))
-    //   .then(objectId => ({id: objectId.toHexString()}));
-  }
 
-  override async pushAnnotation(annotation: Annotation): Promise<ObjectId> {
-    return super.pushAnnotation(annotation);
+    return super.pushAnnotation(optionalConvertDto2Dbo(annotationsDtos));
   }
 
   protected override async getAnnotation(_id: ObjectId, prefixed: boolean = false): Promise<any> {
@@ -118,9 +113,13 @@ export class AnnotationStore extends AbstractAnnotationStore {
       // @ts-ignore
       .then((annotations: any): AnnotationDto[] =>
         annotations.map((annotation: any) => {
-          annotation.body = Array.isArray(annotation.body) ?
-            annotation.body.map((body: any) => ({ ...body, id: body.id.toHexString() }))
-            : { ...annotation.body, id: annotation.body.id.toHexString() };
+
+          if(Array.isArray(annotation.body)) {
+            annotation.body = annotation.body.map((body: any) => ({ ...body, id: body.id.toHexString() }));
+          } else {
+            annotation.body = { ...annotation.body, id: annotation.body.id.toHexString() };
+          }
+
           return exportAnnotation(annotation, uri);
         })
       );
@@ -130,23 +129,24 @@ export class AnnotationStore extends AbstractAnnotationStore {
     return exportAnnotation(annotation, this.annotationBaseURI);
   }
 
-  private mapOldIdToNewId(annotations: AnnotationDto[], storedAnnotations: AnnotationDto[], asURL: string = ''): { [key: string]: AnnotationDto } {
+  private mapOldIdToNewId(olds: AnnotationDto[], stored: AnnotationDto[], asURL: string = ''): { [key: string]: AnnotationDto } {
     const idDict: { [key: string]: AnnotationDto } = {};
 
-    annotations.forEach(annotation => {
-      const found = storedAnnotations.find((item: AnnotationDto) => {
-        if (Array.isArray(annotation.body) && Array.isArray(item.body)) {
+    olds.forEach(old => {
+      const found = stored.find((item: AnnotationDto) => {
+        if (Array.isArray(old.body) && Array.isArray(item.body)) {
           // @ts-ignore
-          annotation.body = annotation.body.map((body: Body, index: number) => ({ ...body, id: item.body[index].id }));
+          old.body = old.body.map((body: Body, index: number) => ({ ...body, id: item.body[index].id }));
         } else {
-          (annotation.body as Body).id = (item.body as Body).id;
+          (old.body as Body).id = (item.body as Body).id;
         }
-        return _.isEqual(item.origin, annotation.origin)
-          && _.isEqual(item.body, annotation.body)
-          && _.isEqual(item.target, annotation.target);
+        return _.isEqual(item.origin, old.origin)
+          && _.isEqual(item.body, old.body)
+          && _.isEqual(item.target, old.target);
       });
       if (found) {
-        idDict[annotation.id] = found;
+        const dictId = !!old?.id ? old.id : found.id;
+        idDict[dictId] = found;
       }
     });
     return idDict;
