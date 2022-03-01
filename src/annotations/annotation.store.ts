@@ -115,9 +115,15 @@ export class AnnotationStore extends AbstractAnnotationStore {
         annotations.map((annotation: any) => {
 
           if (Array.isArray(annotation.body)) {
-            annotation.body = annotation.body.map((body: any) => ({ ...body, id: body.id.toHexString() }));
+            annotation.body = annotation.body.map((body: any) => ({
+                ...body,
+                id: body?.id
+              }));
           } else {
-            annotation.body = { ...annotation.body, id: annotation.body.id.toHexString() };
+            annotation.body = {
+              ...annotation.body,
+              id: annotation?.body?.id
+            };
           }
 
           return exportAnnotation(annotation, uri);
