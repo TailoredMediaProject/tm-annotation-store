@@ -1,7 +1,7 @@
 import {AbstractAnnotationStore} from './abstract-annotation.store';
 import {Annotation} from './annotation.model';
 import express from 'express';
-import {exportAnnotation, optionalConvertDto2Dbo} from './annotation.converter';
+import {AnnotationConverter} from './annotation.converter';
 import {Annotation as AnnotationDto, Body} from '../openapi';
 import {Filter, ObjectId} from 'mongodb';
 import _ from 'lodash';
@@ -83,7 +83,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
       return Promise.reject();
     } else {
       // @ts-ignore
-      return this.pushAnnotations(annotationsDtos.map(optionalConvertDto2Dbo))
+      return this.pushAnnotations(annotationsDtos.map(AnnotationConverter.dto2Dbo))
         // @ts-ignore
         .then((insertedAnnotations: AnnotationDto[]) =>
           // @ts-ignore
@@ -93,7 +93,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
   }
 
   protected override async getAnnotation(_id: ObjectId, prefixed: boolean = false): Promise<any> {
-    return this.exportDboToDto(await super.getAnnotation(_id, prefixed));
+    return AnnotationConverter.dbo2Dto(await super.getAnnotation(_id, prefixed), this.annotationBaseURI);
   }
 
   // @ts-ignore
@@ -108,13 +108,9 @@ export class AnnotationStore extends AbstractAnnotationStore {
             ...body,
             id: body?.id
           }));
-          return exportAnnotation(annotation, uri);
+          return AnnotationConverter.dbo2Dto(annotation, uri);
         })
       );
-  }
-
-  protected exportDboToDto(annotation: Annotation): AnnotationDto {
-    return exportAnnotation(annotation, this.annotationBaseURI);
   }
 
   private mapOldIdToNewId(olds: AnnotationDto[], stored: AnnotationDto[]): { [key: string]: string } | string {

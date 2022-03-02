@@ -33,8 +33,7 @@ export abstract class AbstractAnnotationStore extends DataSource {
     return this.config.annotationsCollection
       .insertOne({
         ...annotation,
-        created: new Date(),
-        _id: new ObjectId()
+        created: new Date()
       })
       .then(async (insertOneResult: InsertOneResult<Annotation>) => {
         // Check if there are equal, but other annotations
