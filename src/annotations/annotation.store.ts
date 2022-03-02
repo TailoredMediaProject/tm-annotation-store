@@ -2,9 +2,8 @@ import {AbstractAnnotationStore} from './abstract-annotation.store';
 import {Annotation} from './annotation.model';
 import express from 'express';
 import {AnnotationConverter} from './annotation.converter';
-import {Annotation as AnnotationDto, Body} from '../openapi';
+import {Annotation as AnnotationDto} from '../openapi';
 import {Filter, ObjectId} from 'mongodb';
-import _ from 'lodash';
 import {ApiValidation} from '../services/ApiValidation';
 
 export class AnnotationStore extends AbstractAnnotationStore {
@@ -83,7 +82,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
       return Promise.reject();
     } else {
       return Promise.all(annotationsDtos.map(dto => this.pushAnnotation(AnnotationConverter.dto2Dbo(dto))))
-        .then((inserted: Annotation[]) => this.mapOldIdToNewId(annotationsDtos, inserted));
+        .then((insertedIds: ObjectId[]) => this.mapOldIdToNewId(annotationsDtos, insertedIds));
     }
   }
 
@@ -108,11 +107,11 @@ export class AnnotationStore extends AbstractAnnotationStore {
       );
   }
 
-  private mapOldIdToNewId(olds: AnnotationDto[], stored: Annotation[]): { [key: string]: string } | string {
+  private mapOldIdToNewId(olds: AnnotationDto[], objectIds: ObjectId[]): { [key: string]: string } | string {
     const idDict: { [key: string]: string } = {};
 
     olds.forEach((old: AnnotationDto, i: number) => {
-      const newId = AnnotationConverter.addBaseUri(stored[i]._id, this.annotationBaseURI);
+      const newId = AnnotationConverter.addBaseUri(objectIds[i].toHexString(), this.annotationBaseURI);
       const dictId = !!old?.id ? old.id : newId;
       idDict[dictId] = newId;
     });

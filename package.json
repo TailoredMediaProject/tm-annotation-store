@@ -20,7 +20,6 @@
   "dependencies": {
     "@redlink/tm-annotation-store-api": "^2.0.19",
     "@types/hash-sum": "^1.0.0",
-    "@types/lodash": "^4.14.179",
     "@types/mongodb": "^4.0.7",
     "@types/morgan": "^1.9.3",
     "apollo-datasource": "^0.8.0",
@@ -30,7 +29,6 @@
     "graphql-import-node": "0.0.4",
     "hash-sum": "^2.0.0",
     "kafkajs": "^1.15.0",
-    "lodash": "^4.17.21",
     "mongodb": "^4.4.0",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.15",

@@ -1,9 +1,8 @@
 import {AnnotationStoreConfig} from './config';
 import {DataSource} from 'apollo-datasource';
 import express from 'express';
-import {Filter, InsertManyResult, InsertOneResult, ModifyResult, ObjectId} from 'mongodb';
+import {Filter, InsertOneResult, ObjectId, WithId} from 'mongodb';
 import {ValidationError} from 'apollo-server';
-import {Body} from '../openapi';
 import {Annotation} from './annotation.model';
 
 export abstract class AbstractAnnotationStore extends DataSource {
@@ -28,50 +27,30 @@ export abstract class AbstractAnnotationStore extends DataSource {
 
   protected abstract addRoutes(router: express.Router): express.Router;
 
-  public pushAnnotation(annotation: any): Promise<Annotation> {
+  public pushAnnotation(annotation: any): Promise<ObjectId> {
     // Each annotation gets inserted
     return this.config.annotationsCollection
       .insertOne({
         ...annotation,
         created: new Date()
       })
-      .then(async (insertOneResult: InsertOneResult<Annotation>) => {
-        // Check if there are equal, but other annotations
-        // @ts-ignore
-        const updatedResult: ModifyResult<Annotation> = await this.config.annotationsCollection.findOneAndUpdate(
-          {
-            _id: {$ne: insertOneResult.insertedId},
-            origin: annotation.origin,
-            body: annotation.body,
-            target: annotation.target,
-            replacedBy: undefined
-          },
-          {
-            $set: {
-              replacedBy: insertOneResult.insertedId
-            }
-          },
-          {
-            returnDocument: 'after'
-          }
-        );
-
-        // The old annotation was updated
-        if (!!updatedResult?.value?._id && !!updatedResult?.value?.replacedBy) {
-          // So create its link to the new one. As we only return the updated ID, no need to wait here for update finish
-          void this.config.annotationsCollection.findOneAndUpdate(
-            {
-              _id: insertOneResult.insertedId
-            },
-            {
-              $set: {
-                replaces: updatedResult?.value?._id
+      .then((insertOneResult: InsertOneResult<Annotation>) => {
+        // If annotation has replaces set, update the replaced annotation#replacedBy property if empty
+        if (!!annotation.replaces) {
+          // Tested $ifNull operator on findOneAndUpdate#$set#replacedBy and in aggregation pipeline, does not work!
+          this.config.annotationsCollection.findOne({ _id: new ObjectId(annotation.replaces) })
+            // @ts-ignore
+            .then((replaced: WithId<Annotation>): void => {
+              if (!replaced?.replacedBy) {
+                void this.config.annotationsCollection.updateOne(
+                  { _id: new ObjectId(annotation.replaces) },
+                  { $set: { replacedBy: insertOneResult.insertedId.toHexString() } }
+                );
               }
-            }
-          );
+            });
         }
 
-        return this.config.annotationsCollection.findOne({_id: insertOneResult.insertedId}).then(found => found as Annotation);
+        return insertOneResult.insertedId;
       });
   }
 
