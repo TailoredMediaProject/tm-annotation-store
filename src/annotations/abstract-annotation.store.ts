@@ -27,7 +27,7 @@ export abstract class AbstractAnnotationStore extends DataSource {
 
   protected abstract addRoutes(router: express.Router): express.Router;
 
-  public pushAnnotation(annotation: any): Promise<ObjectId> {
+  public pushAnnotation(annotation: any): Promise<any> {
     // Each annotation gets inserted
     return this.config.annotationsCollection
       .insertOne({
@@ -50,8 +50,13 @@ export abstract class AbstractAnnotationStore extends DataSource {
             });
         }
 
-        return insertOneResult.insertedId;
+        return this.config.annotationsCollection.findOne({ _id: insertOneResult.insertedId });
       });
+  }
+
+  // @ts-ignore
+  public pushAnnotations(annotations): Promise<any> {
+    return Promise.all(annotations.map(this.pushAnnotation));
   }
 
   public getAnnotationFromId(id: string | ObjectId): Promise<any> {

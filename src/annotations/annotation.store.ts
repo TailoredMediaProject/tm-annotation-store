@@ -82,7 +82,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
       return Promise.reject();
     } else {
       return Promise.all(annotationsDtos.map(dto => this.pushAnnotation(AnnotationConverter.dto2Dbo(dto))))
-        .then((insertedIds: ObjectId[]) => this.mapOldIdToNewId(annotationsDtos, insertedIds));
+        .then((annotations: Annotation[]) => this.mapOldIdToNewId(annotationsDtos, annotations.map(annotation => annotation._id)));
     }
   }
 
