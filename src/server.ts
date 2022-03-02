@@ -14,7 +14,7 @@ const port: number = +(process.env.SERVER_PORT || 4000);
 const baseURI: string = (process.env.BASE_URI || `http://localhost:${port}`).replace(/\/*$/, '');
 const staticDir = process.env.BE_STATIC || 'static';
 const documentBasePath = `/resources/docs/`;
-const annotationBasePath = `/resources/annotations/`;
+const annotationBasePath = `/resources/annotations`;
 const mongo = new Mongo();
 
 const kafkaBroker = process.env.KAFKA_BROKER?.split(',') || ['localhost:9092'];

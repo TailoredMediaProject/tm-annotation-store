@@ -17,7 +17,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
           if (!!req?.body) {
             this.push(req, res)
               .then(annotation => res
-                .status(201)
+                .status(200)
                 .json(annotation))
               .catch(next);
           } else {
@@ -82,13 +82,8 @@ export class AnnotationStore extends AbstractAnnotationStore {
         .json(itemsErrorMessage);
       return Promise.reject();
     } else {
-      // @ts-ignore
-      return this.pushAnnotations(annotationsDtos.map(AnnotationConverter.dto2Dbo))
-        // @ts-ignore
-        .then((insertedAnnotations: AnnotationDto[]) =>
-          // @ts-ignore
-          this.mapOldIdToNewId(annotationsDtos, insertedAnnotations)
-        );
+      return Promise.all(annotationsDtos.map(dto => this.pushAnnotation(AnnotationConverter.dto2Dbo(dto))))
+        .then((inserted: Annotation[]) => this.mapOldIdToNewId(annotationsDtos, inserted));
     }
   }
 
@@ -113,20 +108,13 @@ export class AnnotationStore extends AbstractAnnotationStore {
       );
   }
 
-  private mapOldIdToNewId(olds: AnnotationDto[], stored: AnnotationDto[]): { [key: string]: string } | string {
+  private mapOldIdToNewId(olds: AnnotationDto[], stored: Annotation[]): { [key: string]: string } | string {
     const idDict: { [key: string]: string } = {};
 
-    olds.forEach(old => {
-      const found = stored.find((item: AnnotationDto) => {
-        old.body = old.body.map((body: Body, index: number) => ({ ...body, id: item.body[index].id }));
-        return _.isEqual(item.origin, old.origin)
-          && _.isEqual(item.body, old.body)
-          && _.isEqual(item.target, old.target);
-      });
-      if (found) {
-        const dictId = !!old?.id ? old.id : found.id;
-        idDict[dictId] = found.id;
-      }
+    olds.forEach((old: AnnotationDto, i: number) => {
+      const newId = AnnotationConverter.addBaseUri(stored[i]._id, this.annotationBaseURI);
+      const dictId = !!old?.id ? old.id : newId;
+      idDict[dictId] = newId;
     });
 
     const keys: string[] = Object.keys(idDict);

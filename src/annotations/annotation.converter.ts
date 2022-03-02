@@ -56,9 +56,23 @@ export class AnnotationConverter {
     return dbo;
   };
 
-  public static dbo2Dto = (annotation: Annotation, annotationBaseURI: string = ''): AnnotationDto => {
+  // @ts-ignore
+  public static readonly addBaseUri = (id: unknown, annotationBaseURI: string): string => !!id ? `${annotationBaseURI}/${id}`: undefined;
+
+  public static dbo2Dto = (annotation: Annotation, annotationBaseURI: string): AnnotationDto => {
     const dto: AnnotationDto = this.objectDbo2Dto(annotation);
-    dto.id = annotationBaseURI + dto.id;
+
+    dto.id = AnnotationConverter.addBaseUri(dto.id, annotationBaseURI);
+    dto.replacedBy = AnnotationConverter.addBaseUri(dto.replacedBy, annotationBaseURI);
+    dto.replaces = AnnotationConverter.addBaseUri(dto.replaces, annotationBaseURI);
+    dto.body?.forEach(body => body.id = AnnotationConverter.addBaseUri(body.id, annotationBaseURI))
+
+    if(Array.isArray(dto.target)) {
+      dto.target?.forEach(target => target.source = AnnotationConverter.addBaseUri(target.source, annotationBaseURI))
+    } else {
+      dto.target.source = AnnotationConverter.addBaseUri(dto.target.source, annotationBaseURI);
+    }
+
     return dto;
   };
 
