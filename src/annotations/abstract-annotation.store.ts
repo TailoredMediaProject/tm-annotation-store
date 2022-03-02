@@ -7,6 +7,7 @@ import {Body} from '../openapi';
 import {Annotation} from './annotation.model';
 
 export abstract class AbstractAnnotationStore extends DataSource {
+  public static readonly ERROR_ANNOTATION_NOT_FOUND = 'No annotation found with ID';
   protected readonly annotationBaseURI: string;
   readonly contextLinks: any[];
 
@@ -17,10 +18,6 @@ export abstract class AbstractAnnotationStore extends DataSource {
       'https://www.w3.org/ns/anno.jsonld'
     ];
     console.info(`Initialized AnnotationStore with baseURI ${this.annotationBaseURI}`);
-  }
-
-  protected getAnnotationBaseURI(): string {
-    return this.annotationBaseURI;
   }
 
   public applyMiddleware(app: express.Application): void {
@@ -83,10 +80,10 @@ export abstract class AbstractAnnotationStore extends DataSource {
       .insertMany(annotations.map((annotation: any) => ({
         ...annotation,
         created: new Date(),
-        body: Array.isArray(annotation.body) ? annotation.body.map((body: Body) => ({
+        body: annotation.body.map((body: Body) => ({
           ...body,
           id: new ObjectId()
-        })) : annotation.body.id = { ...annotation.body, id: new ObjectId() }
+        }))
       })))
       .then((document: InsertManyResult<Annotation>) =>
         // @ts-ignore
@@ -112,7 +109,7 @@ export abstract class AbstractAnnotationStore extends DataSource {
       .toArray()
       .then(document => {
         if (!document || document.length < 1) {
-          return Promise.reject('No document found with id ' + _id.toHexString());
+          return Promise.reject(new Error(`${AbstractAnnotationStore.ERROR_ANNOTATION_NOT_FOUND} ${_id.toHexString()}`));
         }
         return document[0];
       });

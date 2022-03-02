@@ -11,13 +11,14 @@
     "build:start": "npm run build && npm run start",
     "dev:start": "nodemon ./src/server.ts",
     "package": "npm run generate:build && copy-node-modules . ./dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -R -f dist node_modules"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@redlink/tm-annotation-store-api": "^2.0.17",
+    "@redlink/tm-annotation-store-api": "^2.0.18",
     "@types/hash-sum": "^1.0.0",
     "@types/lodash": "^4.14.179",
     "@types/mongodb": "^4.0.7",

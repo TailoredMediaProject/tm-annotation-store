@@ -9,6 +9,6 @@ export interface Annotation {
     /**ID of newer version*/
     replacedBy?: string,
     created: string,
-    body: Body | Body[],
+    body: Body[],
     target: Target | Target[]
 }
