@@ -26,7 +26,12 @@ export class AnnotationStore extends AbstractAnnotationStore {
         }
       }).get((req, res, next) => {
       if (ApiValidation.validateContentTypeHeader(req, res)) {
-        this.listAnnotations()
+        let filter: Filter<Annotation[]> = {};
+        if (!!req?.query.idFilter) {
+          // @ts-ignore
+          filter = this.listQueryToFilter(req?.query.idFilter);
+        }
+        this.listAnnotations(filter)
           .then(annotations => res.json(annotations))
           .catch(next);
       }
@@ -124,5 +129,14 @@ export class AnnotationStore extends AbstractAnnotationStore {
     const keys: string[] = Object.keys(idDict);
 
     return keys.length === 1 ? idDict[keys[0]] : idDict;
+  }
+
+  private listQueryToFilter(idFilter?: string[]): Filter<Annotation[]> {
+    const matchData: Filter<Annotation[]> = {};
+    if (idFilter && idFilter.length > 0) {
+      const ids = idFilter.map(id => this.objectIdFromUrl(id, this.annotationBaseURI));
+      matchData._id = {$in: ids};
+    }
+    return matchData;
   }
 }
