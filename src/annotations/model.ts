@@ -95,6 +95,7 @@ export class Annotation {
     }
 
     getIdString(): string {
+        // @ts-ignore
         return this._id?.toHexString();
     }
 
