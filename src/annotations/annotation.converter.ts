@@ -46,12 +46,7 @@ export class AnnotationConverter {
     dbo.replacedBy = AnnotationConverter.urlToId(dbo.replacedBy);
     dbo.replaces = AnnotationConverter.urlToId(dbo.replaces);
     dbo.body?.forEach(body => body.id = AnnotationConverter.urlToId(body.id))
-
-    if(Array.isArray(dbo.target)) {
-      dbo.target?.forEach(target => target.source = AnnotationConverter.urlToId(target.source))
-    } else {
-      dbo.target.source = AnnotationConverter.urlToId(dbo.target.source);
-    }
+    dbo.target?.forEach(target => target.source = AnnotationConverter.urlToId(target.source))
 
     return dbo;
   };
@@ -66,13 +61,7 @@ export class AnnotationConverter {
     dto.replacedBy = AnnotationConverter.addBaseUri(dto.replacedBy, annotationBaseURI);
     dto.replaces = AnnotationConverter.addBaseUri(dto.replaces, annotationBaseURI);
     dto.body?.forEach(body => body.id = AnnotationConverter.addBaseUri(body.id, annotationBaseURI))
-
-    if(Array.isArray(dto.target)) {
-      dto.target?.forEach(target => target.source = AnnotationConverter.addBaseUri(target.source, annotationBaseURI))
-    } else {
-      dto.target.source = AnnotationConverter.addBaseUri(dto.target.source, annotationBaseURI);
-    }
-
+    dto.target?.forEach(target => target.source = AnnotationConverter.addBaseUri(target.source, annotationBaseURI))
     return dto;
   };
 

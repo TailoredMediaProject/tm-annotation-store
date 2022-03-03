@@ -14,7 +14,7 @@ import {Annotation} from "./annotation.model";
 
 export const createAnnotation = (
   body: [Body],
-  target: Target | Target[],
+  target: Target[],
   origin: Origin = {creator: 'AnnotationStore', type: OriginType.Manual},
   replaces?: string,
   replacedBy?: string): Annotation => {

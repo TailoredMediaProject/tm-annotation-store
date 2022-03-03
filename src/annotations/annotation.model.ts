@@ -10,5 +10,5 @@ export interface Annotation {
     replacedBy?: string,
     created: string,
     body: Body[],
-    target: Target | Target[]
+    target: Target[]
 }
