@@ -1,6 +1,7 @@
 import {Annotation} from './annotation.model';
 import {ObjectId} from 'mongodb';
 import {Annotation as AnnotationDto} from '../openapi';
+import {UtilService} from "../services/Util.service";
 
 export class AnnotationConverter {
   private static readonly objectDbo2Dto = (dbo: Annotation): AnnotationDto => ({
@@ -26,8 +27,14 @@ export class AnnotationConverter {
   private static readonly urlToId = (id: any): string => {
     try {
       const url = new URL(id);
-      const paths: string[] = url.pathname.split('/');
-      return paths.length > 0 ? paths[paths.length - 1] : id;
+      const pathEnd: string = url.pathname.substring(url.pathname.lastIndexOf('/') + 1);
+      let objectId: ObjectId | undefined = undefined;
+      if (pathEnd.length > 0) {
+        try {
+          objectId = new ObjectId(pathEnd[pathEnd.length - 1]);
+        } catch {}
+      }
+      return objectId ? objectId : id;
     } catch (err) {
       return id;
     }
@@ -61,8 +68,14 @@ export class AnnotationConverter {
     dto.replacedBy = AnnotationConverter.addBaseUri(dto.replacedBy, annotationBaseURI);
     dto.replaces = AnnotationConverter.addBaseUri(dto.replaces, annotationBaseURI);
     dto.body?.forEach(body => body.id = AnnotationConverter.addBaseUri(body.id, annotationBaseURI))
-    dto.target?.forEach(target => target.source = AnnotationConverter.addBaseUri(target.source, annotationBaseURI))
+    dto.target?.forEach(target => {
+      if (UtilService.objectIdIsValid(target.source)) {
+        target.source = AnnotationConverter.addBaseUri(target.source, annotationBaseURI);
+      }
+    })
     return dto;
   };
+
+
 
 }

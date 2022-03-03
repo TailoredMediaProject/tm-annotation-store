@@ -4,6 +4,8 @@ import express from 'express';
 import {Filter, InsertOneResult, ObjectId, WithId} from 'mongodb';
 import {ValidationError} from 'apollo-server';
 import {Annotation} from './annotation.model';
+import {UtilService} from "../services/Util.service";
+import {Body} from "../openapi";
 
 export abstract class AbstractAnnotationStore extends DataSource {
   public static readonly ERROR_ANNOTATION_NOT_FOUND = 'No annotation found with ID';
@@ -32,7 +34,13 @@ export abstract class AbstractAnnotationStore extends DataSource {
     return this.config.annotationsCollection
       .insertOne({
         ...annotation,
-        created: new Date()
+        created: new Date(),
+        body: annotation.body.map((body: any) => {
+          if (!UtilService.objectIdIsValid(body.id)) {
+            body.id = new ObjectId()
+          }
+          return body;
+        }),
       })
       .then((insertOneResult: InsertOneResult<Annotation>) => {
         // If annotation has replaces set, update the replaced annotation#replacedBy property if empty
@@ -68,7 +76,7 @@ export abstract class AbstractAnnotationStore extends DataSource {
   }
 
   public getAnnotationFromUrl(url: string): Promise<any> {
-    return this.getAnnotation(this.objectIdFromUrl(url));
+    return this.getAnnotation(this.objectIdFromUrl(url, this.annotationBaseURI));
   }
 
   protected getAnnotation(_id: ObjectId, prefixed = false): Promise<any> {
@@ -93,7 +101,7 @@ export abstract class AbstractAnnotationStore extends DataSource {
 
   public deleteAnnotation(url: string): Promise<void> {
     // @ts-ignore
-    return this.deleteAnnotations({ _id: this.objectIdFromUrl(url) });
+    return this.deleteAnnotations({ _id: this.objectIdFromUrl(url, this.annotationBaseURI) });
   }
 
   public deleteAnnotations(filter: any): Promise<void> {
@@ -111,23 +119,28 @@ export abstract class AbstractAnnotationStore extends DataSource {
     }
   }
 
-  private objectIdFromUrl(url: string): ObjectId {
-    if (url.startsWith(this.annotationBaseURI)) {
+  protected objectIdFromUrl(url: string, baseUri: string): ObjectId {
+    if (url.startsWith(baseUri)) {
       try {
-        return new ObjectId(url.substr(url.lastIndexOf('/') + 1));
+        return new ObjectId(url.substring(url.lastIndexOf('/') + 1));
       } catch (err) {
         console.error(err);
         throw new ValidationError('annotation url is not correct, trailing id not valid');
       }
     } else if (url.startsWith('anno')) {
       try {
-        return new ObjectId(url.substr(url.lastIndexOf(':') + 1));
+        return new ObjectId(url.substring(url.lastIndexOf(':') + 1));
       } catch (err) {
         console.error(err);
         throw new ValidationError('annotation id is not correct, trailing id not valid');
       }
     } else {
-      throw new ValidationError('annotation url is not correct');
+      try {
+        return new ObjectId(url);
+      } catch (err) {
+        console.error(err);
+        throw new ValidationError('id is not correct');
+      }
     }
   }
 }
