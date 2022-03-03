@@ -44,7 +44,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
               this.getAnnotation(id)
                 .then((annotation: any) => res.json(annotation))
                 .catch(err => {
-                  if(err instanceof Error && err?.message?.startsWith(AbstractAnnotationStore.ERROR_ANNOTATION_NOT_FOUND)) {
+                  if (err instanceof Error && err?.message?.startsWith(AbstractAnnotationStore.ERROR_ANNOTATION_NOT_FOUND)) {
                     res.status(404).json(err.message);
                   } else {
                     next(err);
@@ -66,23 +66,28 @@ export class AnnotationStore extends AbstractAnnotationStore {
   // @ts-ignore
   private push(req, res): Promise<any> {
     const annotationsDtos: AnnotationDto[] = Array.isArray(req.body) ? req.body : [req.body];
-    const itemsErrorMessage: string = annotationsDtos.reduce((accumulator: string, dto: AnnotationDto, i: number) => {
-      const errorMessage = ApiValidation.checkProperties(this.requiredAnnotationProperties, dto);
 
-      if (!!errorMessage) {
-        return `${accumulator}Item # ${i}: ${errorMessage}. `;
-      }
-
-      return '';
-    }, '');
-
-    if (!!itemsErrorMessage) {
-      res.status(400)
-        .json(itemsErrorMessage);
-      return Promise.reject();
+    if (annotationsDtos.length === 0) {
+      res.status(400).json('At least one annotation is required for its creation');
     } else {
-      return Promise.all(annotationsDtos.map(dto => this.pushAnnotation(AnnotationConverter.dto2Dbo(dto))))
-        .then((annotations: Annotation[]) => this.mapOldIdToNewId(annotationsDtos, annotations.map(annotation => annotation._id)));
+      const itemsErrorMessage: string = annotationsDtos.reduce((accumulator: string, dto: AnnotationDto, i: number) => {
+        const errorMessage = ApiValidation.checkProperties(this.requiredAnnotationProperties, dto);
+
+        if (!!errorMessage) {
+          return `${accumulator}Item # ${i}: ${errorMessage}. `;
+        }
+
+        return '';
+      }, '');
+
+      if (!!itemsErrorMessage) {
+        res.status(400)
+          .json(itemsErrorMessage);
+        return Promise.reject();
+      } else {
+        return Promise.all(annotationsDtos.map(dto => this.pushAnnotation(AnnotationConverter.dto2Dbo(dto))))
+          .then((annotations: Annotation[]) => this.mapOldIdToNewId(annotationsDtos, annotations.map(annotation => annotation._id)));
+      }
     }
   }
 
