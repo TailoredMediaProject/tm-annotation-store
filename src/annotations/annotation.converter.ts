@@ -67,12 +67,17 @@ export class AnnotationConverter {
     dto.id = AnnotationConverter.addBaseUri(dto.id, annotationBaseURI);
     dto.replacedBy = AnnotationConverter.addBaseUri(dto.replacedBy, annotationBaseURI);
     dto.replaces = AnnotationConverter.addBaseUri(dto.replaces, annotationBaseURI);
-    dto.body?.forEach(body => body.id = AnnotationConverter.addBaseUri(body.id, annotationBaseURI))
-    dto.target?.forEach(target => {
+    dto.body = !!dto?.body?.length ? dto.body.map(body => {
+      body.id = AnnotationConverter.addBaseUri(body.id, annotationBaseURI);
+      return body;
+    }) : [];
+    dto.target = !!dto?.target?.length ? dto.target.map(target => {
       if (UtilService.objectIdIsValid(target.source)) {
         target.source = AnnotationConverter.addBaseUri(target.source, annotationBaseURI);
       }
-    })
+      return target;
+    }) : [];
+
     return dto;
   };
 
