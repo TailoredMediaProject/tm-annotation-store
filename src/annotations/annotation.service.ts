@@ -2,7 +2,7 @@ import {ObjectId} from "mongodb";
 import {
   Body,
   BodyType, FragmentResource,
-  MetadataBody,
+  MetaDataBody,
   Origin,
   OriginType,
   ResourceBody,
@@ -37,8 +37,8 @@ export const createAnnotationBody = (id: string, confidence: number = 100, type:
   }
   if (relation) {
     switch (type) {
-      case BodyType.MetadataBody:
-        const metaBody = body as MetadataBody;
+      case BodyType.MetaDataBody:
+        const metaBody = body as MetaDataBody;
         metaBody.value = value;
         metaBody.relation = relation;
         body = metaBody;

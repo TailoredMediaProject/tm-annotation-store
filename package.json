@@ -18,7 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@redlink/tm-annotation-store-api": "^2.0.28",
+    "@redlink/tm-annotation-store-api": "^2.0.29",
     "@types/hash-sum": "^1.0.0",
     "@types/mongodb": "^4.0.7",
     "@types/morgan": "^1.9.3",
