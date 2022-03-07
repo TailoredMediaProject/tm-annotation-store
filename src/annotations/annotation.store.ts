@@ -130,12 +130,12 @@ export class AnnotationStore extends AbstractAnnotationStore {
     const filter: Filter<Annotation[]> = {};
     const arrayDelimitersRegex = /[;,\|]+/;
 
-    if (!!query?.idFilter) {
-      const ids: string[] = query.idFilter.split(arrayDelimitersRegex);
+    if (!!query?.ids) {
+      const ids: string[] = query.ids.split(arrayDelimitersRegex);
 
       if (!!ids?.length) {
         filter._id = {
-          $in: query.idFilter.map((id: string) => this.objectIdFromUrl(id, this.annotationBaseURI))
+          $in: ids.map((id: string) => this.objectIdFromUrl(id, this.annotationBaseURI))
         };
       }
     }
