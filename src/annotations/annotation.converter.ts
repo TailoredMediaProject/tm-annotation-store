@@ -80,5 +80,4 @@ export class AnnotationConverter {
 
     return dto;
   };
-
 }

@@ -26,12 +26,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
         }
       }).get((req, res, next) => {
       if (ApiValidation.validateContentTypeHeader(req, res)) {
-        let filter: Filter<Annotation[]> = {};
-        if (!!req?.query.idFilter) {
-          // @ts-ignore
-          filter = this.listQueryToFilter(req?.query.idFilter);
-        }
-        this.listAnnotations(filter)
+        this.listAnnotations(this.createListAnnotationsFilter(req.query))
           .then(annotations => res.json(annotations))
           .catch(next);
       }
@@ -131,12 +126,30 @@ export class AnnotationStore extends AbstractAnnotationStore {
     return keys.length === 1 ? idDict[keys[0]] : idDict;
   }
 
-  private listQueryToFilter(idFilter?: string[]): Filter<Annotation[]> {
-    const matchData: Filter<Annotation[]> = {};
-    if (idFilter && idFilter.length > 0) {
-      const ids = idFilter.map(id => this.objectIdFromUrl(id, this.annotationBaseURI));
-      matchData._id = {$in: ids};
+  private readonly createListAnnotationsFilter = (query: any) => {
+    const filter: Filter<Annotation[]> = {};
+    const arrayDelimitersRegex = /[;,\|]+/;
+
+    if (!!query?.idFilter) {
+      const ids: string[] = query.idFilter.split(arrayDelimitersRegex);
+
+      if (!!ids?.length) {
+        filter._id = {
+          $in: query.idFilter.map((id: string) => this.objectIdFromUrl(id, this.annotationBaseURI))
+        };
+      }
     }
-    return matchData;
-  }
+
+    if (!!query?.assetUris) {
+      const uris: string[] = query.assetUris.split(arrayDelimitersRegex);
+
+      if (!!uris?.length) {
+        filter['target.source'] = {
+          $in: uris
+        };
+      }
+    }
+
+    return filter;
+  };
 }

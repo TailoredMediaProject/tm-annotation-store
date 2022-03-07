@@ -15,6 +15,6 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.26.0",
-    "@redlink/tm-annotation-store-api": "^2.0.29"
+    "@redlink/tm-annotation-store-api": "^2.0.30"
   }
 }
