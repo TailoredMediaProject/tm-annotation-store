@@ -5,7 +5,6 @@ import {Filter, InsertOneResult, ObjectId, WithId} from 'mongodb';
 import {ValidationError} from 'apollo-server';
 import {Annotation} from './annotation.model';
 import {UtilService} from "../services/Util.service";
-import {Body} from "../openapi";
 
 export abstract class AbstractAnnotationStore extends DataSource {
   public static readonly ERROR_ANNOTATION_NOT_FOUND = 'No annotation found with ID';
