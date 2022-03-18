@@ -44,7 +44,7 @@ Build, view, run locally
 docker build . -t $(whoami)/tm-annotation-store # Build
 docker images # View build, available images
 docker image rm <image_id> # Remove image
-docker run -p 8080:8080 -d $(whoami)/tm-annotation-store # Run image
+docker run -p 8080:8080 $(whoami)/tm-annotation-store # Run image
 docker ps # View running containers
 docker logs <container_id> # Print container logs
 docker stop <container_id> # Stop container
