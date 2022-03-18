@@ -12,7 +12,7 @@
     "dev:start": "nodemon ./src/server.ts",
     "package": "npm run generate:build && copy-node-modules . ./dist",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "rm -R -f dist node_modules"
+    "clean": "rm -R -f dist node_modules src/openapi package-lock.json scripts/init-kafka/package-lock.json"
   },
   "keywords": [],
   "author": "",
