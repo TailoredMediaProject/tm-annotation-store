@@ -102,7 +102,7 @@ export class AnnotationConverter {
         const uri: string = rBody?.value?.canonicalLink;
         ifUrlOrElse(uri, (): void => {rBody.value = uri;}, (): void => {
             // @ts-ignore
-            rBody.value = rBody?.value?.id;
+            rBody.value = ObjectId.isValid(rBody?.value?.id) ? rBody?.value?.id : undefined;
             ifUrlOrElse(rBody.value, (): void => {}, (): void => {rBody.value = `https://data.tmedia.redlink.io/kb/${rBody.value}`;});
           }
         );
