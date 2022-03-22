@@ -131,7 +131,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
     const arrayDelimitersRegex = /[;,\|]+/;
 
     if (!!query?.ids) {
-      const ids: string[] = query.ids.split(arrayDelimitersRegex);
+      const ids: string[] = Array.isArray(query.ids) ? query.ids : query.ids.split(arrayDelimitersRegex);
 
       if (!!ids?.length) {
         filter._id = {
@@ -141,7 +141,7 @@ export class AnnotationStore extends AbstractAnnotationStore {
     }
 
     if (!!query?.assetUris) {
-      const uris: string[] = query.assetUris.split(arrayDelimitersRegex);
+      const uris: string[] = Array.isArray(query.assetUris) ? query.assetUris : query.assetUris.split(arrayDelimitersRegex);
 
       if (!!uris?.length) {
         filter['target.source'] = {
