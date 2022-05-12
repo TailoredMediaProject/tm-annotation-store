@@ -29,7 +29,7 @@ export const createAnnotation = (
   }
 }
 
-export const createAnnotationBody = (id: string, confidence: number = 100, type: BodyType, relation?: string, value?: any): Body => {
+export const createAnnotationBody = (id: string, confidence: number = 1, type: BodyType, relation?: string, value?: any): Body => {
   let body: Body = {
     id,
     confidence,
