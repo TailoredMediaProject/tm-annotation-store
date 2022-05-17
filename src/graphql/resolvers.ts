@@ -1,9 +1,7 @@
-import { IResolvers } from "apollo-server";
+import {IResolvers} from 'apollo-server';
 import {AnnotationStore} from '../annotations/store';
 import {Annotation, Filter} from '../annotations/model';
 import {GraphQLScalarType} from 'graphql';
-import {createAnnotationBody} from "../annotations/annotation.service";
-import {ObjectId} from "mongodb";
 
 const resolvers: IResolvers = {
     Void: new GraphQLScalarType({

@@ -1,5 +1,6 @@
 import {ObjectId} from 'mongodb';
 import hash_sum from 'hash-sum';
+import {DomainType} from '../openapi';
 
 export class Annotation {
 
@@ -41,10 +42,25 @@ export class Annotation {
 
     private static toBody(body: any, type: string) {
         switch (type) {
-            case 'bodyResource': return body;
-            case 'bodyText': return {type: 'TextualBody', value: body.value}
+            case 'bodyResource':
+                return body;
+            case 'bodyText':
+                return {
+                    type: 'TextualBody',
+                    value: body.value,
+                    domains: this.addDomainType(body?.domains, DomainType.Transcript)
+                }
             default: return undefined;
         }
+    }
+
+    private static addDomainType = (domains: DomainType[], domain: DomainType): DomainType[] => {
+        if(domains?.length > 0 && !domains.some((d: DomainType): boolean => d === domain)) {
+            domains.push(DomainType.Transcript)
+        } else {
+            return [domain];
+        }
+        return domains;
     }
 
     private static toTarget(target: any, type: string) {

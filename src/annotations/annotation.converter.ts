@@ -1,10 +1,12 @@
 import {Annotation} from './annotation.model';
 import {ObjectId} from 'mongodb';
-import {Annotation as AnnotationDto, Body, BodyType, ResourceBody} from '../openapi';
+import {Annotation as AnnotationDto, Body, BodyType, DomainType, ResourceBody} from '../openapi';
 import {UtilService} from '../services/Util.service';
 
 export class AnnotationConverter {
   private static readonly ENSURE_RESOURCE_BODY_URI = true;
+  // @ts-ignore
+  private static readonly BODY_DOMAINS: string[] = Object.keys(DomainType).map((k: string): string => DomainType[k].toUpperCase());
 
   private static readonly objectDbo2Dto = (dbo: Annotation): AnnotationDto => ({
     id: dbo._id.toHexString(),
@@ -55,10 +57,39 @@ export class AnnotationConverter {
 
     dbo.replacedBy = AnnotationConverter.urlToId(dbo.replacedBy);
     dbo.replaces = AnnotationConverter.urlToId(dbo.replaces);
-    dbo.body?.forEach(body => body.id = AnnotationConverter.urlToId(body.id));
+    dbo.body?.forEach((body: Body) => body.id = AnnotationConverter.urlToId(body.id));
     dbo.target?.forEach(target => target.source = AnnotationConverter.urlToId(target.source));
 
+    AnnotationConverter.validateBodyDomain(dbo.body);
+
     return dbo;
+  };
+
+  public static readonly validateBodyDomain = (body: Body | Body[]): Body[] => {
+    if (!!body) {
+      const bodies: Body[] = Array.isArray(body) ? body : [body];
+
+      return bodies.map((b: Body, i: number): Body => {
+        // Check if domains exist
+        if (!b?.domains || !b?.domains?.length) {
+          throw new Error(`Body.domains # ${i + 1} is missing at least one of the following DomainTypes: ${this.BODY_DOMAINS.join(', ')}`);
+        } else {
+          // Check if domain values are allowed
+          b.domains = b.domains.map((d: DomainType): DomainType => {
+            if(!this.BODY_DOMAINS.some((valid: string): boolean => d?.toUpperCase() === valid)) {
+              throw new Error(`Body.domain value "${d}" is invalid, must be at least one of DomainTypes: ${this.BODY_DOMAINS.join(', ')}`);
+            } else {
+              // @ts-ignore
+              return d.toUpperCase();
+            }
+          });
+        }
+
+        return b;
+      });
+    }
+
+    return [];
   };
 
   // @ts-ignore
@@ -81,6 +112,8 @@ export class AnnotationConverter {
       return target;
     }) : [];
 
+    this.validateBodyDomain(dto.body);
+
     return dto;
   };
 
@@ -97,13 +130,19 @@ export class AnnotationConverter {
         }
       };
 
-      ifUrlOrElse(rBody.value, (): void => {}, (): void => {
+      ifUrlOrElse(rBody.value, (): void => {
+      }, (): void => {
         // @ts-ignore
         const uri: string = rBody?.value?.canonicalLink;
-        ifUrlOrElse(uri, (): void => {rBody.value = uri;}, (): void => {
+        ifUrlOrElse(uri, (): void => {
+            rBody.value = uri;
+          }, (): void => {
             // @ts-ignore
             rBody.value = ObjectId.isValid(rBody?.value?.id) ? rBody?.value?.id : undefined;
-            ifUrlOrElse(rBody.value, (): void => {}, (): void => {rBody.value = `https://data.tmedia.redlink.io/kb/${rBody.value}`;});
+            ifUrlOrElse(rBody.value, (): void => {
+            }, (): void => {
+              rBody.value = `https://data.tmedia.redlink.io/kb/${rBody.value}`;
+            });
           }
         );
       });

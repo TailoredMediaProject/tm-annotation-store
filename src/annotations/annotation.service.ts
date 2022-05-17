@@ -1,7 +1,9 @@
-import {ObjectId} from "mongodb";
+import {ObjectId} from 'mongodb';
 import {
   Body,
-  BodyType, FragmentResource,
+  BodyType,
+  DomainType,
+  FragmentResource,
   MetaDataBody,
   Origin,
   OriginType,
@@ -9,8 +11,8 @@ import {
   Selector,
   Target,
   TargetType
-} from "../openapi";
-import {Annotation} from "./annotation.model";
+} from '../openapi';
+import {Annotation} from './annotation.model';
 
 export const createAnnotation = (
   body: [Body],
@@ -33,22 +35,28 @@ export const createAnnotationBody = (id: string, confidence: number = 1, type: B
   let body: Body = {
     id,
     confidence,
-    type
+    type,
+    domains: []
   }
+
   if (relation) {
     switch (type) {
       case BodyType.MetaDataBody:
         const metaBody = body as MetaDataBody;
         metaBody.value = value;
         metaBody.relation = relation;
+        metaBody.domains = [DomainType.Metadata];
         body = metaBody;
         break;
       case BodyType.ResourceBody:
         const resourceBody = body as ResourceBody;
         resourceBody.value = value;
         resourceBody.relation = relation;
+        resourceBody.domains = [DomainType.Video];
         body = resourceBody;
         break;
+      default:
+        body.domains = [DomainType.Video];
     }
   }
   return body;
