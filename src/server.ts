@@ -6,8 +6,9 @@ import {DocumentStore} from './documents/store';
 import {KafkaClient} from './kafka/kafkaClient/KafkaClient';
 import {AnnotationStore} from './annotations/annotation.store';
 import morgan from 'morgan';
-import path = require('path');
 import {ErrorMiddleware} from './error.middelware';
+import path = require('path');
+import bodyParser = require('body-parser');
 
 const annotations = process.env.ANNOTATIONS_COLLECTION || 'annotations';
 const documents = process.env.DOCUMENTS_COLLECTION || 'documents';
@@ -26,8 +27,11 @@ const kafkaClientId = process.env.KAFKA_CLIENT_ID || 'tm-annotation_store';
 const kafka = KafkaClient.createClient(kafkaBroker, kafkaClientId);
 const app = express();
 
+export const FILE_SIZE_LIMIT = '1mb';
+
 const run = async (): Promise<any> => {
-  app.use(express.json({ limit: '10mb' }));
+  app.use(bodyParser.json({limit: FILE_SIZE_LIMIT}));
+  app.use(bodyParser.urlencoded({limit: FILE_SIZE_LIMIT, extended: true, parameterLimit:1024}));
   app.use(morgan('dev'));
 
   app.get('/', (req, res) => res.send('Server is up and running!'));

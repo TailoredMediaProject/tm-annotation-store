@@ -1,5 +1,6 @@
 import {NextFunction, Request, Response} from 'express';
 import {AnnotationError} from './models/annotation-error.model';
+import {FILE_SIZE_LIMIT} from './server';
 
 export const ErrorMiddleware = (err: AnnotationError | Error, req: Request, res: Response, next: NextFunction): void => {
   if (err instanceof AnnotationError) {
@@ -8,6 +9,12 @@ export const ErrorMiddleware = (err: AnnotationError | Error, req: Request, res:
     res.status(err.statusCode).json(body);
   }
   else {
-    res.status(500).json({title: 500, message: err.message});
+    // @ts-ignore
+    if(err?.statusCode === 413) {
+      err.message += `, max file size limit is ${FILE_SIZE_LIMIT}`;
+    }
+    // @ts-ignore
+    const title = err.statusCode ? err.statusCode : 500;
+    res.status(title).json({title, message: err.message});
   }
 };
