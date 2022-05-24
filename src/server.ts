@@ -7,6 +7,7 @@ import {KafkaClient} from './kafka/kafkaClient/KafkaClient';
 import {AnnotationStore} from './annotations/annotation.store';
 import morgan from 'morgan';
 import path = require('path');
+import {ErrorMiddleware} from './error.middelware';
 
 const annotations = process.env.ANNOTATIONS_COLLECTION || 'annotations';
 const documents = process.env.DOCUMENTS_COLLECTION || 'documents';
@@ -76,6 +77,10 @@ run()
 
     app.use('/api/v1/spec.yaml', express.static(path.join(__dirname, `${staticDir}/spec.yaml`)));
     console.log(`Serving spec on http://localhost:${server.address().port}/api/v1/spec.yaml`);
+
+    // Register error middleware, must always be last
+    console.log('Register ErrorMiddleware');
+    app.use(ErrorMiddleware);
   })
   .catch(error => {
     console.error(error);

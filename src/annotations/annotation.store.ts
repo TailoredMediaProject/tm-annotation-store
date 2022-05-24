@@ -1,27 +1,28 @@
 import {AbstractAnnotationStore} from './abstract-annotation.store';
 import {Annotation} from './annotation.model';
-import express from 'express';
+import express, {NextFunction} from 'express';
 import {AnnotationConverter} from './annotation.converter';
 import {Annotation as AnnotationDto} from '../openapi';
 import {Filter, ObjectId} from 'mongodb';
 import {ApiValidation} from '../services/ApiValidation';
+import {AnnotationError} from '../models/annotation-error.model';
 
 export class AnnotationStore extends AbstractAnnotationStore {
   private readonly requiredAnnotationProperties: string[] = ['origin', 'created', 'target', 'body'];
 
   protected addRoutes(router: express.Router): express.Router {
     router.route('/')
-      .post((req, res, next) => {
+      .post((req, res, next: NextFunction) => {
         if (ApiValidation.validateContentTypeHeader(req, res)) {
           if (!!req?.body) {
-            this.push(req, res)
+            this.push(req, res, next)
               .then(annotation => res
                 .status(200)
                 .json(annotation))
               .catch(next);
           } else {
-            res.status(400)
-              .json('Body missing');
+            next(new AnnotationError(400, 'Body mising'));
+            return;
           }
         }
       }).get((req, res, next) => {
@@ -45,18 +46,20 @@ export class AnnotationStore extends AbstractAnnotationStore {
                 .then((annotation: any) => res.json(annotation))
                 .catch(err => {
                   if (err instanceof Error && err?.message?.startsWith(AbstractAnnotationStore.ERROR_ANNOTATION_NOT_FOUND)) {
-                    res.status(404).json(err.message);
+                    next(new AnnotationError(404, err.message));
+                    return;
                   } else {
                     next(err);
+                    return;
                   }
                 });
             } else {
-              res.status(400)
-                .json('Invalid ID');
+              next(new AnnotationError(400, 'Invalid ID'));
+              return;
             }
           } else {
-            res.status(400)
-              .json('ID missing');
+            next(new AnnotationError(400, 'ID missing'));
+            return;
           }
         }
       });
@@ -64,11 +67,12 @@ export class AnnotationStore extends AbstractAnnotationStore {
   }
 
   // @ts-ignore
-  private push(req, res): Promise<any> {
+  private push(req, res, next: NextFunction): Promise<any> {
     const annotationsDtos: AnnotationDto[] = Array.isArray(req.body) ? req.body : [req.body];
 
     if (annotationsDtos.length === 0) {
-      res.status(400).json('At least one annotation is required for its creation');
+      next(new AnnotationError(400, 'At least one annotation is required for its creation'));
+      return Promise.reject();
     } else {
       const itemsErrorMessage: string = annotationsDtos.reduce((accumulator: string, dto: AnnotationDto, i: number) => {
         const errorMessage = ApiValidation.checkProperties(this.requiredAnnotationProperties, dto);
@@ -81,12 +85,12 @@ export class AnnotationStore extends AbstractAnnotationStore {
       }, '');
 
       if (!!itemsErrorMessage) {
-        res.status(400)
-          .json(itemsErrorMessage);
+        next(new AnnotationError(400, itemsErrorMessage));
         return Promise.reject();
       } else {
         return Promise.all(annotationsDtos.map(dto => this.pushAnnotation(AnnotationConverter.dto2Dbo(dto))))
-          .then((annotations: Annotation[]) => this.mapOldIdToNewId(annotationsDtos, annotations.map(annotation => annotation._id)));
+          .then((annotations: Annotation[]) => this.mapOldIdToNewId(annotationsDtos, annotations.map(annotation => annotation._id)))
+          .catch(next);
       }
     }
   }

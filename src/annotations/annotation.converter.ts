@@ -2,6 +2,7 @@ import {Annotation} from './annotation.model';
 import {ObjectId} from 'mongodb';
 import {Annotation as AnnotationDto, Body, BodyType, DomainType, ResourceBody} from '../openapi';
 import {UtilService} from '../services/Util.service';
+import {AnnotationError} from '../models/annotation-error.model';
 
 export class AnnotationConverter {
   private static readonly ENSURE_RESOURCE_BODY_URI = true;
@@ -72,12 +73,12 @@ export class AnnotationConverter {
       return bodies.map((b: Body, i: number): Body => {
         // Check if domains exist
         if (!b?.domains || !b?.domains?.length) {
-          throw new Error(`Body.domains # ${i + 1} is missing at least one of the following DomainTypes: ${this.BODY_DOMAINS.join(', ')}`);
+          throw new AnnotationError(400, `Body.domains # ${i + 1} is missing at least one of the following DomainTypes: ${this.BODY_DOMAINS.join(', ')}`);
         } else {
           // Check if domain values are allowed
           b.domains = b.domains.map((d: DomainType): DomainType => {
             if(!this.BODY_DOMAINS.some((valid: string): boolean => d?.toLowerCase() === valid)) {
-              throw new Error(`Body.domain value "${d}" is invalid, must be at least one of DomainTypes: ${this.BODY_DOMAINS.join(', ')}`);
+              throw new AnnotationError(400, `Body.domain value "${d}" is invalid, must be at least one of DomainTypes: ${this.BODY_DOMAINS.join(', ')}`);
             } else {
               // @ts-ignore
               return d.toLowerCase();
