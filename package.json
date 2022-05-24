@@ -18,7 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@redlink/tm-annotation-store-api": "^2.0.37",
+    "@redlink/tm-annotation-store-api": "^2.0.38",
     "apollo-datasource": "^0.8.0",
     "apollo-server": "^2.23.0",
     "axios": "^0.26.1",

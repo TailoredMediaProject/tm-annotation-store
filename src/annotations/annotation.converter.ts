@@ -6,7 +6,7 @@ import {UtilService} from '../services/Util.service';
 export class AnnotationConverter {
   private static readonly ENSURE_RESOURCE_BODY_URI = true;
   // @ts-ignore
-  private static readonly BODY_DOMAINS: string[] = Object.keys(DomainType).map((k: string): string => DomainType[k].toUpperCase());
+  private static readonly BODY_DOMAINS: string[] = Object.keys(DomainType).map((k: string): string => DomainType[k].toLowerCase());
 
   private static readonly objectDbo2Dto = (dbo: Annotation): AnnotationDto => ({
     id: dbo._id.toHexString(),
@@ -76,11 +76,11 @@ export class AnnotationConverter {
         } else {
           // Check if domain values are allowed
           b.domains = b.domains.map((d: DomainType): DomainType => {
-            if(!this.BODY_DOMAINS.some((valid: string): boolean => d?.toUpperCase() === valid)) {
+            if(!this.BODY_DOMAINS.some((valid: string): boolean => d?.toLowerCase() === valid)) {
               throw new Error(`Body.domain value "${d}" is invalid, must be at least one of DomainTypes: ${this.BODY_DOMAINS.join(', ')}`);
             } else {
               // @ts-ignore
-              return d.toUpperCase();
+              return d.toLowerCase();
             }
           });
         }
