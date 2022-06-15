@@ -100,7 +100,7 @@ export class AnnotationController extends AbstractAnnotationStore {
             idOrAssetUrl = urlId;
           } else { // Must now be an asset URL or wrong
             if(!url.href.startsWith(this.ASSET_URL_BASE)) {
-              throw new Error(); // Catched correctly!
+              console.warn(`The used URL ${url.href} does start with the default asset URL prefix ${this.ASSET_URL_BASE}`);
             }
           }
         }
