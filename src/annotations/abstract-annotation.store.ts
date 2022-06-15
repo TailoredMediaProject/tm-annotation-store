@@ -1,10 +1,11 @@
 import {AnnotationStoreConfig} from './config';
 import {DataSource} from 'apollo-datasource';
 import express from 'express';
-import {Filter, InsertOneResult, ObjectId, WithId} from 'mongodb';
+import {DeleteResult, Filter, InsertOneResult, ObjectId, WithId} from 'mongodb';
 import {ValidationError} from 'apollo-server';
 import {Annotation} from './annotation.model';
 import {UtilService} from "../services/Util.service";
+import {AnnotationError} from '../models/annotation-error.model';
 
 export abstract class AbstractAnnotationStore extends DataSource {
   public static readonly ERROR_ANNOTATION_NOT_FOUND = 'No annotation found with ID';
@@ -106,6 +107,26 @@ export abstract class AbstractAnnotationStore extends DataSource {
   public deleteAnnotations(filter: any): Promise<void> {
     return this.config.annotationsCollection.deleteMany(filter).then();
   }
+
+  protected readonly deleteAnnotationsByIdOrAssetUrl = (idOrAssetUrl: string): Promise<string> => {
+    const isId = ObjectId.isValid(idOrAssetUrl);
+    const throwErr = (e: Error): string => {
+      throw new AnnotationError(500,
+        `Error on deleting annotations by ${isId ? 'ID': 'Asset URL'} ${idOrAssetUrl}. ${e.toString()}`
+      );
+      return '';
+    };
+
+    if(isId) {
+      return this.config.annotationsCollection.deleteMany({ _id: new ObjectId(idOrAssetUrl)})
+        .then((deleteResult: DeleteResult): string => `Deleted ${deleteResult.deletedCount} by ID`)
+        .catch(throwErr);
+    } else {
+      return this.config.annotationsCollection.deleteMany({ 'target.source': idOrAssetUrl})
+        .then((deleteResult: DeleteResult): string => `Deleted ${deleteResult.deletedCount} by Asset URL`)
+        .catch(throwErr);
+    }
+  };
 
   protected idExists(id: string | ObjectId): Promise<boolean> {
     try {

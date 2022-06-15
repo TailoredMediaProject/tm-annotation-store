@@ -2,6 +2,7 @@ import {NextFunction, Request, Response} from 'express';
 import {AnnotationError} from './models/annotation-error.model';
 import {FILE_SIZE_LIMIT} from './server';
 
+// Don't remove the next method! Without 4 args this method will not work as error handler!
 export const ErrorMiddleware = (err: AnnotationError | Error, req: Request, res: Response, next: NextFunction): void => {
   if (err instanceof AnnotationError) {
     console.error(err);

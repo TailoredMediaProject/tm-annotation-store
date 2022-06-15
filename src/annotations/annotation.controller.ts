@@ -1,14 +1,15 @@
 import {AbstractAnnotationStore} from './abstract-annotation.store';
 import {Annotation} from './annotation.model';
-import express, {NextFunction} from 'express';
+import express, {NextFunction, Request, Response} from 'express';
 import {AnnotationConverter} from './annotation.converter';
 import {Annotation as AnnotationDto} from '../openapi';
 import {Filter, ObjectId} from 'mongodb';
 import {ApiValidation} from '../services/ApiValidation';
 import {AnnotationError} from '../models/annotation-error.model';
 
-export class AnnotationStore extends AbstractAnnotationStore {
+export class AnnotationController extends AbstractAnnotationStore {
   private readonly requiredAnnotationProperties: string[] = ['origin', 'created', 'target', 'body'];
+  private readonly ASSET_URL_BASE: string = 'https://video.tmedia.redlink.io/v/orf';
 
   protected addRoutes(router: express.Router): express.Router {
     router.route('/')
@@ -29,6 +30,14 @@ export class AnnotationStore extends AbstractAnnotationStore {
       if (ApiValidation.validateContentTypeHeader(req, res)) {
         this.listAnnotations(this.createListAnnotationsFilter(req.query))
           .then(annotations => res.json(annotations))
+          .catch(next);
+      }
+    })
+    .delete((req: Request, res: Response, next: NextFunction) => {
+      if (ApiValidation.validateContentTypeHeader(req, res)) {
+        // @ts-ignore
+        this.processDeleteTerm(req?.query?.term)
+          .then((deleteMsg: string) => res.status(200).send(deleteMsg))
           .catch(next);
       }
     });
@@ -63,8 +72,49 @@ export class AnnotationStore extends AbstractAnnotationStore {
           }
         }
       });
+
     return router;
   }
+
+  /**Checks if the argument is a pure mongoDB ID, an URL containing on the last path entry an mongoDB ID, or an assetURL. If correct, all matching annotations are deleted.*/
+  private readonly processDeleteTerm = (idOrAssetUrl: string | undefined): Promise<string> => {
+    if (!idOrAssetUrl) {
+      throw new AnnotationError(400, 'ID missing');
+    }
+
+    let invalidId = !ObjectId.isValid(idOrAssetUrl);
+
+    if (invalidId) { // If invalid, check if issued as an URL
+      let invalidUrl = true;
+
+      try {
+        const url: URL = new URL(idOrAssetUrl);
+        invalidUrl = false;
+        const lastIndex = url.pathname.lastIndexOf("/");
+
+        if(lastIndex > -1) {
+          const urlId = url.pathname.substring(lastIndex + 1, url.pathname.length);
+          invalidId = !ObjectId.isValid(urlId);
+
+          if(!invalidId) {
+            idOrAssetUrl = urlId;
+          } else { // Must now be an asset URL or wrong
+            if(!url.href.startsWith(this.ASSET_URL_BASE)) {
+              throw new Error(); // Catched correctly!
+            }
+          }
+        }
+      } catch (err) {
+        throw new AnnotationError(400, 'Invalid URI, must contain a MongoDB ObjectID or a full asset URL\'');
+      }
+
+      if (invalidId && invalidUrl) {
+        throw new AnnotationError(400, 'Invalid MongoDB ObjectID');
+      }
+    }
+
+    return this.deleteAnnotationsByIdOrAssetUrl(idOrAssetUrl);
+  };
 
   // @ts-ignore
   private push(req, res, next: NextFunction): Promise<any> {

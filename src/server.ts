@@ -4,7 +4,7 @@ import {ApolloServer} from 'apollo-server-express';
 import {Mongo} from './mongo';
 import {DocumentStore} from './documents/store';
 import {KafkaClient} from './kafka/kafkaClient/KafkaClient';
-import {AnnotationStore} from './annotations/annotation.store';
+import {AnnotationController} from './annotations/annotation.controller';
 import morgan from 'morgan';
 import {ErrorMiddleware} from './error.middelware';
 import path = require('path');
@@ -39,13 +39,13 @@ const run = async (): Promise<any> => {
   const annotationsCollection = await mongo.getCollection(annotations);
   const documentsCollection = await mongo.getCollection(documents);
 
-  const annotationStore = new AnnotationStore({ annotationsCollection, annotationBasePath, baseURI });
+  const annotationController: AnnotationController = new AnnotationController({ annotationsCollection, annotationBasePath, baseURI });
 
   // @ts-ignore
   const apollo = new ApolloServer({
     schema,
     dataSources: () => ({
-      annotations: annotationStore
+      annotations: annotationController
     })
   });
   await apollo.start();
@@ -54,7 +54,7 @@ const run = async (): Promise<any> => {
   const documentStore = new DocumentStore({ documentsCollection, annotationsCollection, documentBasePath, baseURI });
   documentStore.applyMiddleware(app);
 
-  annotationStore.applyMiddleware(app);
+  annotationController.applyMiddleware(app);
 
   // const documentMessageManager = new DocumentMessageManager({groupId: kafkaConsumerGroupId[0], topic: kafkaConsumerTopics[0], fromBeginning: false}, documentStore);
   // const annotationMessageManager = new AnnotationMessageManager({
