@@ -37,7 +37,7 @@ export class AnnotationController extends AbstractAnnotationStore {
       if (ApiValidation.validateContentTypeHeader(req, res)) {
         // @ts-ignore
         this.processDeleteTerm(req?.query?.term)
-          .then((deleteMsg: string) => res.status(200).send(deleteMsg))
+          .then((deleteMessages: string[]) => res.status(200).json(deleteMessages))
           .catch(next);
       }
     });
@@ -77,43 +77,48 @@ export class AnnotationController extends AbstractAnnotationStore {
   }
 
   /**Checks if the argument is a pure mongoDB ID, an URL containing on the last path entry an mongoDB ID, or an assetURL. If correct, all matching annotations are deleted.*/
-  private readonly processDeleteTerm = (idOrAssetUrl: string | undefined): Promise<string> => {
+  private readonly processDeleteTerm = (idOrAssetUrl: string | undefined): Promise<string[]> => {
     if (!idOrAssetUrl) {
       throw new AnnotationError(400, 'ID missing');
     }
 
-    let invalidId = !ObjectId.isValid(idOrAssetUrl);
+    const arrayDelimitersRegex = /[;,\|]+/;
+    const idOrAssetUrls: string[] = Array.isArray(idOrAssetUrl) ? idOrAssetUrl : idOrAssetUrl.split(arrayDelimitersRegex);
 
-    if (invalidId) { // If invalid, check if issued as an URL
-      let invalidUrl = true;
+    return Promise.all(idOrAssetUrls.map((toDelete: string) => {
+      let invalidId = !ObjectId.isValid(toDelete);
 
-      try {
-        const url: URL = new URL(idOrAssetUrl);
-        invalidUrl = false;
-        const lastIndex = url.pathname.lastIndexOf("/");
+      if (invalidId) { // If invalid, check if issued as an URL
+        let invalidUrl = true;
 
-        if(lastIndex > -1) {
-          const urlId = url.pathname.substring(lastIndex + 1, url.pathname.length);
-          invalidId = !ObjectId.isValid(urlId);
+        try {
+          const url: URL = new URL(toDelete);
+          invalidUrl = false;
+          const lastIndex = url.pathname.lastIndexOf("/");
 
-          if(!invalidId) {
-            idOrAssetUrl = urlId;
-          } else { // Must now be an asset URL or wrong
-            if(!url.href.startsWith(this.ASSET_URL_BASE)) {
-              console.warn(`The used URL ${url.href} does start with the default asset URL prefix ${this.ASSET_URL_BASE}`);
+          if(lastIndex > -1) {
+            const urlId = url.pathname.substring(lastIndex + 1, url.pathname.length);
+            invalidId = !ObjectId.isValid(urlId);
+
+            if(!invalidId) {
+              toDelete = urlId;
+            } else { // Must now be an asset URL or wrong
+              if(!url.href.startsWith(this.ASSET_URL_BASE)) {
+                console.warn(`The used URL ${url.href} does start with the default asset URL prefix ${this.ASSET_URL_BASE}`);
+              }
             }
           }
+        } catch (err) {
+          throw new AnnotationError(400, 'Invalid URI, must contain a MongoDB ObjectID or a full asset URL\'');
         }
-      } catch (err) {
-        throw new AnnotationError(400, 'Invalid URI, must contain a MongoDB ObjectID or a full asset URL\'');
+
+        if (invalidId && invalidUrl) {
+          throw new AnnotationError(400, 'Invalid MongoDB ObjectID');
+        }
       }
 
-      if (invalidId && invalidUrl) {
-        throw new AnnotationError(400, 'Invalid MongoDB ObjectID');
-      }
-    }
-
-    return this.deleteAnnotationsByIdOrAssetUrl(idOrAssetUrl);
+      return this.deleteAnnotationsByIdOrAssetUrl(toDelete);
+    }));
   };
 
   // @ts-ignore
