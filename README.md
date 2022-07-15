@@ -53,6 +53,114 @@ docker system prune # Removes all unused images
 docker exec -it $(docker ps --format '{{.ID}}') /bin/sh # Go into running image via bash, works also for mongoshell
 ```
 
+## Audio Annotation Example
+
+For Margit Fischer, her KS Entry is:
+
+```json
+{
+  "id": "62a3422762302f17a0896ffe",
+  "vocabulary": "627cdfe78b62be12608e490e",
+  "type": "PERSON",
+  "label": "Margit Fischer",
+  "description": null,
+  "created": "2022-06-10T13:07:51.818Z",
+  "lastModified": "2022-06-10T13:07:51.818Z",
+  "externalResources": [
+    "AA-ID: 38ee5aa6-4690-4f4e-a961-a1c74f234975"
+  ],
+  "sameAs": null,
+  "data": null,
+  "canonicalLink": "https://data.tmedia.redlink.io/kb/62a3422762302f17a0896ffe"
+}
+```
+
+her Automatic Analysis Annotation in AS is:
+
+```json
+{
+  "id": "https://a-store.tmedia.redlink.io/resources/annotations/62c6de50a85507e8add0d48f",
+  "origin": {
+    "creator": "JRSExtractionTM0.1",
+    "type": "automatic"
+  },
+  "created": "2022-07-07T13:23:28.328Z",
+  "body": [
+    {
+      "confidence": 0.22595945000648499,
+      "domains": [
+        "video"
+      ],
+      "id": "https://a-store.tmedia.redlink.io/resources/annotations/62c6de50a85507e8add0d490",
+      "relation": "face",
+      "type": "ResourceBody",
+      "value": "https://data.tmedia.redlink.io/kb/62a3422762302f17a0896ffe"
+    }
+  ],
+  "target": [
+    {
+      "selector": {
+        "spacial": {
+          "h": 0.4965277910232544,
+          "type": "PercentSpatialSelector",
+          "w": 0.208984375,
+          "x": 0.478515625,
+          "y": 0.1267361044883728
+        },
+        "temporal": {
+          "end": 6.08,
+          "start": 3.92,
+          "type": "TemporalFragmentSelector"
+        },
+        "type": "MediaFragmentSelector"
+      },
+      "source": "https://video.tmedia.redlink.io/v/orf/578877.mp4",
+      "type": "FragmentResource"
+    }
+  ]
+}
+```
+and the audio annotation for her is:
+
+```json
+{
+  "id": "https://a-store.tmedia.redlink.io/resources/annotations/62d13c1ccf0265fd87c7db2d",
+  "origin": {
+    "creator": "Redlink",
+    "type": "manual"
+  },
+  "created": "2022-07-15T11:58:28.328Z",
+  "body": [
+    {
+      "confidence": 1.0,
+      "domains": [
+        "audio"
+      ],
+      "id": "https://a-store.tmedia.redlink.io/resources/annotations/62c6de50a85507e8add0d490",
+      "type": "TextBody",
+      "value": "Ich bin gespannt ob mein Ehemann nochmal Bundespräsident wird"
+    }
+  ],
+  "target": [
+    {
+      "selector": {
+        "end": 6.08,
+        "start": 3.92,
+        "type": "TemporalFragmentSelector"
+      },
+      "source": "https://video.tmedia.redlink.io/v/orf/578877.mp4",
+      "type": "FragmentResource"
+    }
+  ]
+}
+```
+
+to inject her manually into the AS by the *create annotation* endpoint:
+
+```
+https://a-store.tmedia.redlink.io/resources/annotations/
+```
+
 ## Graphql Annotations
 Schema is defined in [.api/schema.graphql]
 
