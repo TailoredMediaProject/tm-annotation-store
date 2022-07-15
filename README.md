@@ -124,12 +124,12 @@ and the audio annotation for her is:
 
 ```json
 {
-  "id": "https://a-store.tmedia.redlink.io/resources/annotations/62d13c1ccf0265fd87c7db2d",
+  "id": "https://a-store.tmedia.redlink.io/resources/annotations/62d148b3cf0265fd87c7db2f",
   "origin": {
     "creator": "Redlink",
     "type": "manual"
   },
-  "created": "2022-07-15T11:58:28.328Z",
+  "created": "2022-07-15T12:55:28.328Z",
   "body": [
     {
       "confidence": 1.0,
@@ -137,15 +137,16 @@ and the audio annotation for her is:
         "audio"
       ],
       "id": "https://a-store.tmedia.redlink.io/resources/annotations/62c6de50a85507e8add0d490",
-      "type": "TextBody",
-      "value": "Ich bin gespannt ob mein Ehemann nochmal Bundespräsident wird"
+      "relation": "face",
+      "type": "ResourceBody",
+      "value": "https://data.tmedia.redlink.io/kb/62a3422762302f17a0896ffe"
     }
   ],
   "target": [
     {
       "selector": {
-        "end": 6.08,
-        "start": 3.92,
+        "end": 7,
+        "start": 10,
         "type": "TemporalFragmentSelector"
       },
       "source": "https://video.tmedia.redlink.io/v/orf/578877.mp4",
