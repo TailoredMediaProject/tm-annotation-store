@@ -2,6 +2,10 @@
 
 Stores annotations
 
+## Behavior
+
+- `Annotation.Body.Quantification` all values below zero, no value at all or strings are mapped to -1. Zero or positive numbers remain as they are
+
 ## Local Development
 
 ### Setup
