@@ -124,9 +124,9 @@ and the audio annotation for her is:
 
 ```json
 {
-  "id": "https://a-store.tmedia.redlink.io/resources/annotations/62d148b3cf0265fd87c7db2f",
+  "id": "https://a-store.tmedia.redlink.io/resources/annotations/62d161b3a85507e8add0fff5",
   "origin": {
-    "creator": "Redlink",
+    "creator": "Redlink, Manual Entry",
     "type": "manual"
   },
   "created": "2022-07-15T12:55:28.328Z",
@@ -149,7 +149,7 @@ and the audio annotation for her is:
         "start": 10,
         "type": "TemporalFragmentSelector"
       },
-      "source": "https://video.tmedia.redlink.io/v/orf/578877.mp4",
+      "source": "https://video.tmedia.redlink.io/v/orf/170343.mp4",
       "type": "FragmentResource"
     }
   ]

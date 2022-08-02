@@ -58,7 +58,10 @@ export class AnnotationConverter {
 
     dbo.replacedBy = AnnotationConverter.urlToId(dbo.replacedBy);
     dbo.replaces = AnnotationConverter.urlToId(dbo.replaces);
-    dbo.body?.forEach((body: Body) => body.id = AnnotationConverter.urlToId(body.id));
+    dbo.body?.forEach((body: Body): void => {
+      body.id = AnnotationConverter.urlToId(body.id);
+      body.quantification = AnnotationConverter.constrainQuantification(body?.quantification);
+    });
     dbo.target?.forEach(target => target.source = AnnotationConverter.urlToId(target.source));
 
     AnnotationConverter.validateBodyDomain(dbo.body);
@@ -104,6 +107,7 @@ export class AnnotationConverter {
     dto.replaces = AnnotationConverter.addBaseUri(dto.replaces, annotationBaseURI);
     dto.body = !!dto?.body?.length ? dto.body.map((body: Body) => {
       body.id = AnnotationConverter.addBaseUri(body.id, annotationBaseURI);
+      body.quantification = AnnotationConverter.constrainQuantification(body.quantification);
       return AnnotationConverter.resolveBody(body);
     }) : [];
     dto.target = !!dto?.target?.length ? dto.target.map(target => {
@@ -152,5 +156,19 @@ export class AnnotationConverter {
     }
 
     return body;
+  };
+
+  private static readonly constrainQuantification = (quantification: number | string | undefined): number => {
+    if(!!quantification || quantification === 0) {
+      if(typeof quantification === 'number') {
+        if(quantification < 0) {
+          return -1;
+        }
+
+        return quantification;
+      }
+    }
+
+    return -1;
   };
 }
