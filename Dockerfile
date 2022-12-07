@@ -1,4 +1,4 @@
-ARG buildImage=node:lts-alpine
+ARG buildImage=node:16.18.1-alpine3.16
 
 FROM $buildImage as build-stage
 WORKDIR /opt/app
